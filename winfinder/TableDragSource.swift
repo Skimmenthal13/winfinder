@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import UniformTypeIdentifiers
 
 // MARK: - SwiftUI wrapper
 
@@ -86,30 +85,14 @@ final class DragSourceNSView: NSView, NSDraggingSource {
     // MARK: Drag session
 
     private func startDrag(urls: [URL], event: NSEvent) {
-        let paths        = urls.map(\.path).joined(separator: "\n")
-        let mouseInSelf  = convert(event.locationInWindow, from: nil)
+        let mouseInSelf = convert(event.locationInWindow, from: nil)
 
-        // First item carries the WinFinder bundle (all paths) + a file URL
-        let pbItem = NSPasteboardItem()
-        pbItem.setData(
-            paths.data(using: .utf8) ?? Data(),
-            forType: NSPasteboard.PasteboardType(UTType.winfinderFiles.identifier)
-        )
-        if let first = urls.first {
-            pbItem.setString(first.absoluteString, forType: .fileURL)
-        }
-        let firstDrag = NSDraggingItem(pasteboardWriter: pbItem)
-        let firstIcon = urls.first.map { NSWorkspace.shared.icon(forFile: $0.path) } ?? NSImage()
-        firstDrag.setDraggingFrame(
-            NSRect(x: mouseInSelf.x - 16, y: mouseInSelf.y - 16, width: 32, height: 32),
-            contents: firstIcon
-        )
-
-        // Remaining items use plain NSURL (conforms to NSPasteboardWriting)
-        let rest: [NSDraggingItem] = urls.dropFirst().enumerated().map { idx, url in
+        // NSURL conforms to NSPasteboardWriting and is understood by both
+        // Finder and our own onDrop handlers via loadObject(ofClass: URL.self)
+        let draggingItems: [NSDraggingItem] = urls.enumerated().map { idx, url in
             let item   = NSDraggingItem(pasteboardWriter: url as NSURL)
             let icon   = NSWorkspace.shared.icon(forFile: url.path)
-            let offset = CGFloat(idx + 1) * 2
+            let offset = CGFloat(idx) * 2
             item.setDraggingFrame(
                 NSRect(x: mouseInSelf.x - 16 + offset,
                        y: mouseInSelf.y - 16 + offset,
@@ -118,8 +101,6 @@ final class DragSourceNSView: NSView, NSDraggingSource {
             )
             return item
         }
-
-        let draggingItems = [firstDrag] + rest
 
         beginDraggingSession(with: draggingItems, event: event, source: self)
     }

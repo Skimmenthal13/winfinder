@@ -5,7 +5,7 @@ import CoreServices
 // MARK: - FileItem
 
 struct FileItem: Identifiable {
-    let id = UUID()
+    var id: URL { url }   // stable across reloads — same file = same id
     let url: URL
     let name: String
     let modificationDate: Date
