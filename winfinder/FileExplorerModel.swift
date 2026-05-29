@@ -94,7 +94,11 @@ final class FileExplorerModel {
     }
 
     func open(_ item: FileItem) {
-        item.isDirectory ? navigate(to: item.url.path) : NSWorkspace.shared.open(item.url)
+        if item.isDirectory {
+            navigate(to: item.url.path)
+        } else {
+            NSWorkspace.shared.open(item.url)
+        }
     }
 
     func sort(using order: [KeyPathComparator<FileItem>]) {
