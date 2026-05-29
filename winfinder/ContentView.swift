@@ -227,6 +227,16 @@ struct FileListView: View {
         .onPasteCommand(of: [UTType.fileURL]) { _ in
             model.paste()
         }
+        .onKeyPress(.delete, phases: .down) { press in
+            let selected = model.displayed.filter { model.selection.contains($0.url) }
+            guard !selected.isEmpty else { return .ignored }
+            if press.modifiers.contains(.shift) {
+                confirmPermanentDelete(selected)
+            } else {
+                model.delete(selected)
+            }
+            return .handled
+        }
         .contextMenu {
             Button { promptNewFolder() } label: {
                 Label("Nuova cartella", systemImage: "folder.badge.plus")
@@ -438,6 +448,23 @@ struct FileListView: View {
             alert.addButton(withTitle: "Annulla")
             if alert.runModal() == .alertFirstButtonReturn {
                 model.delete(items)
+            }
+        }
+    }
+
+    private func confirmPermanentDelete(_ items: [FileItem]) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            let alert = NSAlert()
+            let label = items.count == 1
+                ? "\"\(items[0].name)\""
+                : "\(items.count) elementi"
+            alert.messageText = "Eliminare definitivamente \(label)?"
+            alert.informativeText = "Questa operazione non può essere annullata."
+            alert.alertStyle = .critical
+            alert.addButton(withTitle: "Elimina")
+            alert.addButton(withTitle: "Annulla")
+            if alert.runModal() == .alertFirstButtonReturn {
+                model.deletePermanently(items)
             }
         }
     }

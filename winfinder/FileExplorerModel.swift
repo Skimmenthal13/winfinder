@@ -269,6 +269,11 @@ final class FileExplorerModel {
         reload()
     }
 
+    func deletePermanently(_ items: [FileItem]) {
+        items.forEach { try? fm.removeItem(at: $0.url) }
+        reload()
+    }
+
     func rename(_ item: FileItem, to newName: String) {
         let dest = item.url.deletingLastPathComponent().appendingPathComponent(newName)
         try? fm.moveItem(at: item.url, to: dest)
