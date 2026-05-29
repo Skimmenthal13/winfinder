@@ -20,7 +20,7 @@ struct ContentView: View {
 // MARK: - FileListView
 
 struct FileListView: View {
-    let model: FileExplorerModel
+    @Bindable var model: FileExplorerModel
     @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
     @State private var sortOrder = [KeyPathComparator<FileItem>]()
     @State private var selection: FileItem.ID? = nil

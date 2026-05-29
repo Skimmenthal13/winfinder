@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SidebarView: View {
-    let model: FileExplorerModel
+    @Bindable var model: FileExplorerModel
     @State private var selection: String? = nil
 
     private let fm = FileManager.default
