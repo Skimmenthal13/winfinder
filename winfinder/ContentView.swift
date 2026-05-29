@@ -187,7 +187,7 @@ struct FileListView: View {
                     .frame(width: sizeColumnWidth, alignment: .trailing)
             }
             .contentShape(Rectangle())
-            .onTapGesture(count: 2) { model.open(item) }
+            .simultaneousGesture(TapGesture(count: 2).onEnded { model.open(item) })
             .onDrag { makeDragProvider(for: item) }
             .contextMenu { rowContextMenu(for: item) }
         }
