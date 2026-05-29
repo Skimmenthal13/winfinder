@@ -43,6 +43,13 @@ struct FileListView: View {
             Divider()
             statusBar
         }
+        .background(
+            TableDragSource(
+                getURLs: { model.displayed.filter { selection.contains($0.id) }.map(\.url) },
+                reload:  { model.reload() }
+            )
+            .allowsHitTesting(false)
+        )
         .onDrop(
             of: [UTType.winfinderFiles, UTType.fileURL],
             isTargeted: $isDropTargeted
@@ -111,7 +118,6 @@ struct FileListView: View {
                         .frame(width: 16, alignment: .center)
                     Text(item.name)
                         .lineLimit(1)
-                        .draggable(fileGroup(for: item))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -120,7 +126,6 @@ struct FileListView: View {
                 Text(Self.dateFmt.string(from: item.modificationDate))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .draggable(fileGroup(for: item))
             }
             .width(160)
 
@@ -128,7 +133,6 @@ struct FileListView: View {
                 Text(item.sizeFormatted)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .draggable(fileGroup(for: item))
             }
             .width(90)
         }
@@ -312,15 +316,6 @@ struct FileListView: View {
                 if !value.isEmpty { action(value) }
             }
         }
-    }
-
-    // MARK: - Drag support
-
-    private func fileGroup(for item: FileItem) -> FileGroupTransferable {
-        let selectedItems = selection.contains(item.id)
-            ? model.displayed.filter { selection.contains($0.id) }
-            : [item]
-        return FileGroupTransferable(urls: selectedItems.map(\.url))
     }
 
     // MARK: - File icon

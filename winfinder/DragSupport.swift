@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 import UniformTypeIdentifiers
 import AppKit
 
@@ -8,28 +8,6 @@ extension UTType {
     /// Private type used to bundle multiple file paths in a single drag item.
     /// Both ends (source and target) are the same app, so no Info.plist declaration needed.
     static let winfinderFiles = UTType(exportedAs: "com.winfinder.file-list")
-}
-
-// MARK: - Transferable drag payload (multi-file)
-
-struct FileGroupTransferable: Transferable {
-    let urls: [URL]
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(contentType: .winfinderFiles) { item in
-            item.urls.map(\.path).joined(separator: "\n").data(using: .utf8)!
-        } importing: { data in
-            let paths = (String(data: data, encoding: .utf8) ?? "")
-                .split(separator: "\n", omittingEmptySubsequences: true)
-                .map { URL(fileURLWithPath: String($0)) }
-            return FileGroupTransferable(urls: paths)
-        }
-        // Single-file representation so Finder can accept the drop
-        FileRepresentation(exportedContentType: .fileURL) { item in
-            guard let url = item.urls.first else { throw CancellationError() }
-            return SentTransferredFile(url)
-        }
-    }
 }
 
 // MARK: - URL extraction from drop providers
