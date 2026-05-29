@@ -3,13 +3,6 @@ import AppKit
 
 // MARK: - SwiftUI wrapper
 
-/// Transparent, non-hit-testable view that installs an NSEvent monitor on the
-/// window and starts a native AppKit drag session when the user drags selected
-/// rows out of the file table.
-///
-/// Holding a direct reference to FileExplorerModel (an @Observable reference
-/// type) means the event handler always reads the *current* selection — no
-/// SwiftUI closure-capture race condition between mouseDown and mouseDragged.
 struct TableDragSource: NSViewRepresentable {
     let model: FileExplorerModel
 
@@ -20,18 +13,23 @@ struct TableDragSource: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: DragSourceNSView, context: Context) {
-        nsView.model = model   // keep reference current across view rebuilds
+        nsView.model = model
     }
 }
 
-// MARK: - AppKit implementation
+// MARK: - AppKit drag source
 
 final class DragSourceNSView: NSView, NSDraggingSource {
     weak var model: FileExplorerModel?
 
     private var monitor: Any?
-    private var downPoint: NSPoint?
+    private var mouseDownEvent: NSEvent?   // beginDraggingSession requires the mouseDown event
     private var dragActive = false
+
+    // Never participate in hit-testing: all clicks fall through to the Table.
+    // Using the AppKit override (not SwiftUI's allowsHitTesting) guarantees
+    // the view stays in the real window hierarchy so viewDidMoveToWindow fires.
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     // MARK: Lifecycle
 
@@ -42,7 +40,7 @@ final class DragSourceNSView: NSView, NSDraggingSource {
             matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
         ) { [weak self] event in
             self?.handle(event)
-            return event   // never consume — only observe
+            return event    // never consume — only observe
         }
     }
 
@@ -59,22 +57,22 @@ final class DragSourceNSView: NSView, NSDraggingSource {
     private func handle(_ event: NSEvent) {
         switch event.type {
         case .leftMouseDown:
-            downPoint  = event.locationInWindow
+            mouseDownEvent = event   // save for beginDraggingSession
             dragActive = false
 
         case .leftMouseDragged:
-            guard !dragActive, let downPt = downPoint else { return }
-            let cur = event.locationInWindow
-            guard hypot(cur.x - downPt.x, cur.y - downPt.y) > 4 else { return }
-            // Read selection from the model reference — always current, no race.
+            guard !dragActive, let downEvent = mouseDownEvent else { return }
+            let down = downEvent.locationInWindow
+            let cur  = event.locationInWindow
+            guard hypot(cur.x - down.x, cur.y - down.y) > 4 else { return }
             let urls = selectedURLs()
             guard !urls.isEmpty else { return }
             dragActive = true
-            downPoint  = nil
-            startDrag(urls: urls, event: event)
+            mouseDownEvent = nil
+            startDrag(urls: urls, event: downEvent)   // must pass the mouseDown event
 
         case .leftMouseUp:
-            downPoint  = nil
+            mouseDownEvent = nil
             dragActive = false
 
         default:
@@ -82,34 +80,34 @@ final class DragSourceNSView: NSView, NSDraggingSource {
         }
     }
 
-    // MARK: Helpers
+    // MARK: Selection
 
     private func selectedURLs() -> [URL] {
-        guard let model else { return [] }
-        return model.displayed
-            .filter { model.selection.contains($0.id) }
-            .map(\.url)
+        // model.selection is Set<URL>; no id mapping needed — compare URLs directly.
+        guard let model, !model.selection.isEmpty else { return [] }
+        let visible = Set(model.displayed.map(\.url))
+        return model.selection.filter { visible.contains($0) }
     }
 
     // MARK: Drag session
 
     private func startDrag(urls: [URL], event: NSEvent) {
-        let mouseInSelf = convert(event.locationInWindow, from: nil)
+        let origin = convert(event.locationInWindow, from: nil)
 
-        let draggingItems: [NSDraggingItem] = urls.enumerated().map { idx, url in
-            let item   = NSDraggingItem(pasteboardWriter: url as NSURL)
+        let items: [NSDraggingItem] = urls.enumerated().map { idx, url in
+            let di     = NSDraggingItem(pasteboardWriter: url as NSURL)
             let icon   = NSWorkspace.shared.icon(forFile: url.path)
             let offset = CGFloat(idx) * 2
-            item.setDraggingFrame(
-                NSRect(x: mouseInSelf.x - 16 + offset,
-                       y: mouseInSelf.y - 16 + offset,
+            di.setDraggingFrame(
+                NSRect(x: origin.x - 16 + offset,
+                       y: origin.y - 16 + offset,
                        width: 32, height: 32),
                 contents: icon
             )
-            return item
+            return di
         }
 
-        beginDraggingSession(with: draggingItems, event: event, source: self)
+        beginDraggingSession(with: items, event: event, source: self)
     }
 
     func draggingSession(
@@ -128,6 +126,8 @@ final class DragSourceNSView: NSView, NSDraggingSource {
         endedAt screenPoint: NSPoint,
         operation: NSDragOperation
     ) {
+        dragActive = false
+        mouseDownEvent = nil
         DispatchQueue.main.async { [weak self] in self?.model?.reload() }
     }
 }

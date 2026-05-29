@@ -44,7 +44,6 @@ struct FileListView: View {
         }
         .background(
             TableDragSource(model: model)
-                .allowsHitTesting(false)
         )
         .onDrop(
             of: [UTType.winfinderFiles, UTType.fileURL],
