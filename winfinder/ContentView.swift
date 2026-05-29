@@ -1,93 +1,26 @@
 import SwiftUI
 
-struct FileItem: Identifiable {
-    let id = UUID()
-    let url: URL
-    let name: String
-    let modificationDate: Date
-    let size: Int64
-    let isDirectory: Bool
-
-    var sizeFormatted: String {
-        guard !isDirectory else { return "" }
-        return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-    }
-}
-
-@Observable
-final class FileExplorerModel {
-    var currentPath: String
-    var searchText = ""
-    var items: [FileItem] = []
-
-    private let fm = FileManager.default
-
-    init(startPath: String = FileManager.default.homeDirectoryForCurrentUser.path) {
-        currentPath = startPath
-        reload()
-    }
-
-    func reload() {
-        let url = URL(fileURLWithPath: currentPath)
-        guard let contents = try? fm.contentsOfDirectory(
-            at: url,
-            includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey, .isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            items = []
-            return
-        }
-
-        items = contents.compactMap { fileURL -> FileItem? in
-            guard let rv = try? fileURL.resourceValues(forKeys: [
-                .contentModificationDateKey, .fileSizeKey, .isDirectoryKey
-            ]) else { return nil }
-            return FileItem(
-                url: fileURL,
-                name: fileURL.lastPathComponent,
-                modificationDate: rv.contentModificationDate ?? .distantPast,
-                size: Int64(rv.fileSize ?? 0),
-                isDirectory: rv.isDirectory ?? false
-            )
-        }.sorted {
-            if $0.isDirectory != $1.isDirectory { return $0.isDirectory }
-            return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
-    }
-
-    var displayed: [FileItem] {
-        guard !searchText.isEmpty else { return items }
-        return items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
-
-    func navigate(to path: String) {
-        var isDir: ObjCBool = false
-        guard fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { return }
-        currentPath = path
-        reload()
-    }
-
-    func navigateUp() {
-        let parent = URL(fileURLWithPath: currentPath).deletingLastPathComponent()
-        guard parent.path != currentPath else { return }
-        navigate(to: parent.path)
-    }
-
-    func open(_ item: FileItem) {
-        if item.isDirectory {
-            navigate(to: item.url.path)
-        } else {
-            NSWorkspace.shared.open(item.url)
-        }
-    }
-
-    func sort(using order: [KeyPathComparator<FileItem>]) {
-        items.sort(using: order)
-    }
-}
+// MARK: - ContentView
 
 struct ContentView: View {
     @State private var model = FileExplorerModel()
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
+
+    var body: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            SidebarView(model: model)
+                .navigationSplitViewColumnWidth(min: 140, ideal: 180, max: 320)
+        } detail: {
+            FileListView(model: model)
+        }
+        .frame(minWidth: 800, minHeight: 450)
+    }
+}
+
+// MARK: - FileListView
+
+struct FileListView: View {
+    let model: FileExplorerModel
     @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
     @State private var sortOrder = [KeyPathComparator<FileItem>]()
     @State private var selection: FileItem.ID? = nil
@@ -107,14 +40,13 @@ struct ContentView: View {
             Divider()
             statusBar
         }
-        .frame(minWidth: 700, minHeight: 450)
     }
 
     // MARK: - Path bar
 
     private var pathBar: some View {
         GeometryReader { geo in
-            let fieldsWidth = geo.size.width - 52  // 10+10 padding + 24 button + 8 spacing
+            let fieldsWidth = geo.size.width - 52
             HStack(spacing: 8) {
                 Button(action: model.navigateUp) {
                     Image(systemName: "arrow.up")
@@ -201,22 +133,22 @@ struct ContentView: View {
         .background(Color(NSColor.windowBackgroundColor))
     }
 
-    // MARK: - Helpers
+    // MARK: - File icon
 
     private func fileIcon(for url: URL) -> String {
         switch url.pathExtension.lowercased() {
-        case "pdf":                                          return "doc.richtext.fill"
-        case "png", "jpg", "jpeg", "gif", "heic", "tiff",
-             "webp", "bmp", "svg":                          return "photo.fill"
-        case "mp4", "mov", "avi", "mkv", "m4v":             return "film.fill"
-        case "mp3", "aac", "flac", "m4a", "wav":            return "music.note"
-        case "zip", "tar", "gz", "bz2", "7z", "rar":        return "archivebox.fill"
+        case "pdf":                                                      return "doc.richtext.fill"
+        case "png", "jpg", "jpeg", "gif", "heic", "tiff", "webp",
+             "bmp", "svg":                                               return "photo.fill"
+        case "mp4", "mov", "avi", "mkv", "m4v":                         return "film.fill"
+        case "mp3", "aac", "flac", "m4a", "wav":                        return "music.note"
+        case "zip", "tar", "gz", "bz2", "7z", "rar":                    return "archivebox.fill"
         case "swift", "py", "js", "ts", "go", "rs",
-             "cpp", "c", "h", "java", "rb", "kt":           return "doc.text.fill"
-        case "app":                                          return "app.fill"
-        case "dmg":                                          return "externaldrive.fill"
-        case "pkg", "mpkg":                                  return "shippingbox.fill"
-        default:                                             return "doc.fill"
+             "cpp", "c", "h", "java", "rb", "kt":                       return "doc.text.fill"
+        case "app":                                                      return "app.fill"
+        case "dmg":                                                      return "externaldrive.fill"
+        case "pkg", "mpkg":                                              return "shippingbox.fill"
+        default:                                                         return "doc.fill"
         }
     }
 }
