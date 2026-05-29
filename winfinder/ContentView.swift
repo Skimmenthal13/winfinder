@@ -354,6 +354,13 @@ struct FileListView: View {
             }
         }
 
+        Button {
+            let urls = selectedItems.map(\.url)
+            NSSharingService(named: .sendViaAirDrop)?.perform(withItems: urls)
+        } label: {
+            Label("AirDrop", systemImage: "dot.radiowaves.left.and.right")
+        }
+
         Divider()
 
         Button { model.copy(selectedItems) } label: {
