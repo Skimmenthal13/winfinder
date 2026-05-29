@@ -64,11 +64,13 @@ final class DragSourceNSView: NSView, NSDraggingSource {
             dragActive = false
 
         case .leftMouseDragged:
-            guard !dragActive, let dp = downPoint else { return }
+            guard !dragActive, let downPt = downPoint else { return }
             let cur = event.locationInWindow
-            guard hypot(cur.x - dp.x, cur.y - dp.y) > 4 else { return }
+            guard hypot(cur.x - downPt.x, cur.y - downPt.y) > 4 else { return }
             guard let urls = getURLs?(), !urls.isEmpty else { return }
-            guard isOverTable(at: dp) else { return }
+            // No isOverTable check needed: if getURLs() is non-empty the user
+            // has already selected files in the table — sidebar and path-bar
+            // clicks do not populate the file selection set.
             dragActive = true
             downPoint  = nil
             startDrag(urls: urls, event: event)
@@ -124,21 +126,4 @@ final class DragSourceNSView: NSView, NSDraggingSource {
         DispatchQueue.main.async { [weak self] in self?.reload?() }
     }
 
-    // MARK: Helpers
-
-    private func isOverTable(at windowPoint: NSPoint) -> Bool {
-        guard let root = window?.contentView else { return false }
-        return findTable(in: root, at: windowPoint) != nil
-    }
-
-    private func findTable(in view: NSView, at pt: NSPoint) -> NSTableView? {
-        if let tv = view as? NSTableView {
-            let local = tv.convert(pt, from: nil)
-            if tv.bounds.contains(local) { return tv }
-        }
-        for sub in view.subviews {
-            if let found = findTable(in: sub, at: pt) { return found }
-        }
-        return nil
-    }
 }
