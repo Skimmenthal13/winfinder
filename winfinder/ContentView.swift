@@ -111,7 +111,7 @@ struct FileListView: View {
                         .frame(width: 16, alignment: .center)
                     Text(item.name)
                         .lineLimit(1)
-                        .onDrag { dragProvider(for: item) }
+                        .draggable(fileGroup(for: item))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -120,7 +120,7 @@ struct FileListView: View {
                 Text(Self.dateFmt.string(from: item.modificationDate))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .onDrag { dragProvider(for: item) }
+                    .draggable(fileGroup(for: item))
             }
             .width(160)
 
@@ -128,7 +128,7 @@ struct FileListView: View {
                 Text(item.sizeFormatted)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .onDrag { dragProvider(for: item) }
+                    .draggable(fileGroup(for: item))
             }
             .width(90)
         }
@@ -316,24 +316,11 @@ struct FileListView: View {
 
     // MARK: - Drag support
 
-    private func dragProvider(for item: FileItem) -> NSItemProvider {
+    private func fileGroup(for item: FileItem) -> FileGroupTransferable {
         let selectedItems = selection.contains(item.id)
             ? model.displayed.filter { selection.contains($0.id) }
             : [item]
-        let paths = selectedItems.map { $0.url.path }.joined(separator: "\n")
-        let provider = NSItemProvider()
-        provider.registerDataRepresentation(
-            forTypeIdentifier: UTType.winfinderFiles.identifier,
-            visibility: .all
-        ) { completion in
-            completion(paths.data(using: .utf8), nil)
-            return nil
-        }
-        // Also register standard file URL so Finder can accept the drop
-        if selectedItems.count == 1, let url = selectedItems.first?.url {
-            provider.registerObject(url as NSURL, visibility: .all)
-        }
-        return provider
+        return FileGroupTransferable(urls: selectedItems.map(\.url))
     }
 
     // MARK: - File icon
