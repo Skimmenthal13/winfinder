@@ -31,6 +31,7 @@ struct FileListView: View {
     @State private var typeSelectBuffer = ""
     @State private var typeSelectTask: DispatchWorkItem? = nil
     @State private var anchorURL: URL? = nil
+    @State private var scrollToURL: URL? = nil
 
     private static let dateFmt: DateFormatter = {
         let f = DateFormatter()
@@ -172,6 +173,7 @@ struct FileListView: View {
     // MARK: - File list
 
     private var fileList: some View {
+        ScrollViewReader { proxy in
         List(model.displayed, id: \.id, selection: $model.selection) { item in
             HStack(spacing: 0) {
                 HStack(spacing: 6) {
@@ -260,6 +262,14 @@ struct FileListView: View {
                 }
             }
         }
+        .onChange(of: scrollToURL) { _, url in
+            guard let url else { return }
+            withAnimation(.easeInOut(duration: 0.15)) {
+                proxy.scrollTo(url, anchor: nil)
+            }
+            scrollToURL = nil
+        }
+        } // ScrollViewReader
     }
 
     // MARK: - Type-to-select
@@ -280,6 +290,7 @@ struct FileListView: View {
                     nextURL = matches[0].url
                 }
                 model.selection = [nextURL]
+                scrollToURL = nextURL
             }
         } else {
             // Different or extended prefix: append and jump to first match
@@ -287,6 +298,7 @@ struct FileListView: View {
             let buf = typeSelectBuffer
             if let match = model.displayed.first(where: { $0.name.lowercased().hasPrefix(buf) }) {
                 model.selection = [match.url]
+                scrollToURL = match.url
             }
         }
 
