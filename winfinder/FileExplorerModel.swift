@@ -25,6 +25,7 @@ final class FileExplorerModel {
     var currentPath: String
     var searchText = ""
     var items: [FileItem] = []
+    var selection: Set<URL> = []          // owned here so drag can read it directly
     var recentPaths: [String] = []
     var mountedVolumes: [URL] = []
 

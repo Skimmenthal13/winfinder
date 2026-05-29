@@ -25,7 +25,6 @@ struct FileListView: View {
     @Bindable var model: FileExplorerModel
     @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
     @State private var sortOrder = [KeyPathComparator<FileItem>]()
-    @State private var selection = Set<FileItem.ID>()
     @State private var isDropTargeted = false
 
     private static let dateFmt: DateFormatter = {
@@ -44,11 +43,8 @@ struct FileListView: View {
             statusBar
         }
         .background(
-            TableDragSource(
-                getURLs: { model.displayed.filter { selection.contains($0.id) }.map(\.url) },
-                reload:  { model.reload() }
-            )
-            .allowsHitTesting(false)
+            TableDragSource(model: model)
+                .allowsHitTesting(false)
         )
         .onDrop(
             of: [UTType.winfinderFiles, UTType.fileURL],
@@ -116,7 +112,7 @@ struct FileListView: View {
     // MARK: - File table
 
     private var fileTable: some View {
-        Table(model.displayed, selection: $selection, sortOrder: $sortOrder) {
+        Table(model.displayed, selection: $model.selection, sortOrder: $sortOrder) {
             TableColumn("Nome", value: \.name) { item in
                 HStack(spacing: 6) {
                     Image(systemName: item.isDirectory ? "folder.fill" : fileIcon(for: item.url))
@@ -240,8 +236,8 @@ struct FileListView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
-            if !selection.isEmpty {
-                Text("\(selection.count) selezionati")
+            if !model.selection.isEmpty {
+                Text("\(model.selection.count) selezionati")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

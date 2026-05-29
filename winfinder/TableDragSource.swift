@@ -3,32 +3,31 @@ import AppKit
 
 // MARK: - SwiftUI wrapper
 
-/// Transparent, non-hit-testable view that installs an NSEvent monitor
-/// on the window and starts native AppKit drag sessions when the user
-/// drags from within an NSTableView — without touching SwiftUI gestures,
-/// so Table row selection is never interrupted.
+/// Transparent, non-hit-testable view that installs an NSEvent monitor on the
+/// window and starts a native AppKit drag session when the user drags selected
+/// rows out of the file table.
+///
+/// Holding a direct reference to FileExplorerModel (an @Observable reference
+/// type) means the event handler always reads the *current* selection — no
+/// SwiftUI closure-capture race condition between mouseDown and mouseDragged.
 struct TableDragSource: NSViewRepresentable {
-    let getURLs: () -> [URL]
-    let reload:  () -> Void
+    let model: FileExplorerModel
 
     func makeNSView(context: Context) -> DragSourceNSView {
         let v = DragSourceNSView()
-        v.getURLs = getURLs
-        v.reload  = reload
+        v.model = model
         return v
     }
 
     func updateNSView(_ nsView: DragSourceNSView, context: Context) {
-        nsView.getURLs = getURLs
-        nsView.reload  = reload
+        nsView.model = model   // keep reference current across view rebuilds
     }
 }
 
 // MARK: - AppKit implementation
 
 final class DragSourceNSView: NSView, NSDraggingSource {
-    var getURLs: (() -> [URL])?
-    var reload:  (() -> Void)?
+    weak var model: FileExplorerModel?
 
     private var monitor: Any?
     private var downPoint: NSPoint?
@@ -67,10 +66,9 @@ final class DragSourceNSView: NSView, NSDraggingSource {
             guard !dragActive, let downPt = downPoint else { return }
             let cur = event.locationInWindow
             guard hypot(cur.x - downPt.x, cur.y - downPt.y) > 4 else { return }
-            guard let urls = getURLs?(), !urls.isEmpty else { return }
-            // No isOverTable check needed: if getURLs() is non-empty the user
-            // has already selected files in the table — sidebar and path-bar
-            // clicks do not populate the file selection set.
+            // Read selection from the model reference — always current, no race.
+            let urls = selectedURLs()
+            guard !urls.isEmpty else { return }
             dragActive = true
             downPoint  = nil
             startDrag(urls: urls, event: event)
@@ -84,13 +82,20 @@ final class DragSourceNSView: NSView, NSDraggingSource {
         }
     }
 
+    // MARK: Helpers
+
+    private func selectedURLs() -> [URL] {
+        guard let model else { return [] }
+        return model.displayed
+            .filter { model.selection.contains($0.id) }
+            .map(\.url)
+    }
+
     // MARK: Drag session
 
     private func startDrag(urls: [URL], event: NSEvent) {
         let mouseInSelf = convert(event.locationInWindow, from: nil)
 
-        // NSURL conforms to NSPasteboardWriting and is understood by both
-        // Finder and our own onDrop handlers via loadObject(ofClass: URL.self)
         let draggingItems: [NSDraggingItem] = urls.enumerated().map { idx, url in
             let item   = NSDraggingItem(pasteboardWriter: url as NSURL)
             let icon   = NSWorkspace.shared.icon(forFile: url.path)
@@ -123,7 +128,6 @@ final class DragSourceNSView: NSView, NSDraggingSource {
         endedAt screenPoint: NSPoint,
         operation: NSDragOperation
     ) {
-        DispatchQueue.main.async { [weak self] in self?.reload?() }
+        DispatchQueue.main.async { [weak self] in self?.model?.reload() }
     }
-
 }
