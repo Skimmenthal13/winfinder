@@ -187,6 +187,17 @@ struct FileListView: View {
                     .frame(width: sizeColumnWidth, alignment: .trailing)
             }
             .contentShape(Rectangle())
+            .onTapGesture {
+                if NSEvent.modifierFlags.contains(.command) {
+                    if model.selection.contains(item.url) {
+                        model.selection.remove(item.url)
+                    } else {
+                        model.selection.insert(item.url)
+                    }
+                } else {
+                    model.selection = [item.url]
+                }
+            }
             .simultaneousGesture(TapGesture(count: 2).onEnded { model.open(item) })
             .onDrag { makeDragProvider(for: item) }
             .contextMenu { rowContextMenu(for: item) }
