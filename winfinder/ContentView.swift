@@ -74,10 +74,16 @@ struct FileListView: View {
 
     private var pathBar: some View {
         GeometryReader { geo in
-            let fieldsWidth = geo.size.width - 52
+            let fieldsWidth = geo.size.width - 84
             HStack(spacing: 8) {
                 Button(action: model.navigateUp) {
                     Image(systemName: "arrow.up")
+                }
+                .buttonStyle(.borderless)
+                .frame(width: 24)
+
+                Button(action: model.reload) {
+                    Image(systemName: "arrow.clockwise")
                 }
                 .buttonStyle(.borderless)
                 .frame(width: 24)

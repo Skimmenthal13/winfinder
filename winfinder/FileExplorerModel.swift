@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import CoreServices
 
 // MARK: - FileItem
 
@@ -31,16 +32,19 @@ final class FileExplorerModel {
     private let recentsKey = "winfinder.recentPaths"
     @ObservationIgnored private var volumeObservers: [NSObjectProtocol] = []
     @ObservationIgnored private var cutURLs: Set<URL> = []
+    @ObservationIgnored private var eventStream: FSEventStreamRef?
 
     init(startPath: String = FileManager.default.homeDirectoryForCurrentUser.path) {
         currentPath = startPath
         recentPaths = UserDefaults.standard.stringArray(forKey: recentsKey) ?? []
         loadVolumes()
         reload()
+        startWatching(currentPath)
         setupVolumeObservers()
     }
 
     deinit {
+        stopWatching()
         volumeObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
     }
 
@@ -103,6 +107,7 @@ final class FileExplorerModel {
         currentPath = path
         addToRecents(path)
         reload()
+        startWatching(path)
     }
 
     func navigateUp() {
@@ -157,6 +162,46 @@ final class FileExplorerModel {
             nc.addObserver(forName: NSWorkspace.didMountNotification,   object: nil, queue: nil, using: handler),
             nc.addObserver(forName: NSWorkspace.didUnmountNotification, object: nil, queue: nil, using: handler),
         ]
+    }
+
+    // MARK: - Filesystem watching
+
+    private func startWatching(_ path: String) {
+        stopWatching()
+
+        let callback: FSEventStreamCallback = { _, info, _, _, _, _ in
+            guard let info else { return }
+            let model = Unmanaged<FileExplorerModel>.fromOpaque(info).takeUnretainedValue()
+            DispatchQueue.main.async { model.reload() }
+        }
+
+        var ctx = FSEventStreamContext(
+            version: 0,
+            info: Unmanaged.passUnretained(self).toOpaque(),
+            retain: nil, release: nil, copyDescription: nil
+        )
+
+        guard let stream = FSEventStreamCreate(
+            nil,
+            callback,
+            &ctx,
+            [path] as CFArray,
+            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+            0.3,
+            FSEventStreamCreateFlags(kFSEventStreamCreateFlagUseCFTypes)
+        ) else { return }
+
+        FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        FSEventStreamStart(stream)
+        eventStream = stream
+    }
+
+    private func stopWatching() {
+        guard let stream = eventStream else { return }
+        FSEventStreamStop(stream)
+        FSEventStreamInvalidate(stream)
+        FSEventStreamRelease(stream)
+        eventStream = nil
     }
 
     // MARK: - Clipboard
