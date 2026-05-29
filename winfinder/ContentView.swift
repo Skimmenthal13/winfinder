@@ -247,14 +247,33 @@ struct FileListView: View {
 
     private func handleTypeToSelect(_ character: String) {
         typeSelectTask?.cancel()
-        typeSelectBuffer += character.lowercased()
-        let buf = typeSelectBuffer
-        if let match = model.displayed.first(where: { $0.name.lowercased().hasPrefix(buf) }) {
-            model.selection = [match.url]
+        let lower = character.lowercased()
+
+        if typeSelectBuffer == lower {
+            // Same letter within timeout: cycle through all files starting with it
+            let matches = model.displayed.filter { $0.name.lowercased().hasPrefix(lower) }
+            if !matches.isEmpty {
+                let nextURL: URL
+                if let cur = model.selection.first,
+                   let idx = matches.firstIndex(where: { $0.url == cur }) {
+                    nextURL = matches[(idx + 1) % matches.count].url
+                } else {
+                    nextURL = matches[0].url
+                }
+                model.selection = [nextURL]
+            }
+        } else {
+            // Different or extended prefix: append and jump to first match
+            typeSelectBuffer += lower
+            let buf = typeSelectBuffer
+            if let match = model.displayed.first(where: { $0.name.lowercased().hasPrefix(buf) }) {
+                model.selection = [match.url]
+            }
         }
+
         let task = DispatchWorkItem { self.typeSelectBuffer = "" }
         typeSelectTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: task)
     }
 
     // MARK: - Drag provider
