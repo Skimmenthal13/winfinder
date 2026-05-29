@@ -28,8 +28,6 @@ struct FileGroupTransferable: Transferable {
         FileRepresentation(exportedContentType: .fileURL) { item in
             guard let url = item.urls.first else { throw CancellationError() }
             return SentTransferredFile(url)
-        } importing: { received in
-            FileGroupTransferable(urls: [received.file])
         }
     }
 }
