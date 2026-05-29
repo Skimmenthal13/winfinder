@@ -24,7 +24,8 @@ struct ContentView: View {
 struct FileListView: View {
     @Bindable var model: FileExplorerModel
     @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
-    @State private var sortOrder = [KeyPathComparator<FileItem>]()
+    @State private var sortKey = "name"
+    @State private var sortAscending = true
     @State private var isDropTargeted = false
 
     private static let dateFmt: DateFormatter = {
@@ -34,17 +35,19 @@ struct FileListView: View {
         return f
     }()
 
+    private let dateColumnWidth: CGFloat = 160
+    private let sizeColumnWidth: CGFloat = 90
+
     var body: some View {
         VStack(spacing: 0) {
             pathBar
             Divider()
-            fileTable
+            columnHeader
+            Divider()
+            fileList
             Divider()
             statusBar
         }
-        .background(
-            TableDragSource(model: model)
-        )
         .onDrop(
             of: [UTType.winfinderFiles, UTType.fileURL],
             isTargeted: $isDropTargeted
@@ -108,11 +111,64 @@ struct FileListView: View {
         .background(Color(NSColor.windowBackgroundColor))
     }
 
-    // MARK: - File table
+    // MARK: - Column header
 
-    private var fileTable: some View {
-        Table(model.displayed, selection: $model.selection, sortOrder: $sortOrder) {
-            TableColumn("Nome", value: \.name) { item in
+    private var columnHeader: some View {
+        HStack(spacing: 0) {
+            headerButton("Nome", key: "name")
+            Divider().frame(height: 14)
+            headerButton("Data modifica", key: "date")
+                .frame(width: dateColumnWidth)
+            Divider().frame(height: 14)
+            headerButton("Dimensione", key: "size")
+                .frame(width: sizeColumnWidth)
+        }
+        .frame(height: 26)
+        .background(Color(NSColor.controlBackgroundColor))
+    }
+
+    private func headerButton(_ title: String, key: String) -> some View {
+        Button {
+            if sortKey == key {
+                sortAscending.toggle()
+            } else {
+                sortKey = key
+                sortAscending = true
+            }
+            applySort()
+        } label: {
+            HStack(spacing: 3) {
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                if sortKey == key {
+                    Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
+                        .font(.caption2)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .frame(maxWidth: key == "name" ? .infinity : nil, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func applySort() {
+        let order: SortOrder = sortAscending ? .forward : .reverse
+        switch sortKey {
+        case "name": model.sort(using: [KeyPathComparator(\.name, order: order)])
+        case "date": model.sort(using: [KeyPathComparator(\.modificationDate, order: order)])
+        case "size": model.sort(using: [KeyPathComparator(\.size, order: order)])
+        default: break
+        }
+    }
+
+    // MARK: - File list
+
+    private var fileList: some View {
+        List(model.displayed, id: \.id, selection: $model.selection) { item in
+            HStack(spacing: 0) {
                 HStack(spacing: 6) {
                     Image(systemName: item.isDirectory ? "folder.fill" : fileIcon(for: item.url))
                         .foregroundStyle(item.isDirectory ? Color.accentColor : Color.secondary)
@@ -121,110 +177,135 @@ struct FileListView: View {
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-            }
 
-            TableColumn("Data modifica", value: \.modificationDate) { item in
                 Text(Self.dateFmt.string(from: item.modificationDate))
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .width(160)
+                    .frame(width: dateColumnWidth, alignment: .leading)
 
-            TableColumn("Dimensione", value: \.size) { item in
                 Text(item.sizeFormatted)
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(width: sizeColumnWidth, alignment: .trailing)
             }
-            .width(90)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) { model.open(item) }
+            .onDrag { makeDragProvider(for: item) }
+            .contextMenu { rowContextMenu(for: item) }
         }
-        .onChange(of: sortOrder) { _, order in
-            model.sort(using: order)
+        .listStyle(.plain)
+        .contextMenu {
+            Button { promptNewFolder() } label: {
+                Label("Nuova cartella", systemImage: "folder.badge.plus")
+            }
+            Button { promptNewFile() } label: {
+                Label("Nuovo file", systemImage: "doc.badge.plus")
+            }
+            if model.canPaste() {
+                Divider()
+                Button { model.paste() } label: {
+                    Label("Incolla", systemImage: "doc.on.clipboard")
+                }
+            }
         }
-        .contextMenu(forSelectionType: FileItem.ID.self, menu: { ids in
-            let items = model.displayed.filter { ids.contains($0.id) }
+    }
 
-            if items.isEmpty {
-                // ── Click su area vuota ──────────────────────────────────
-                Button { promptNewFolder() } label: {
-                    Label("Nuova cartella", systemImage: "folder.badge.plus")
-                }
-                Button { promptNewFile() } label: {
-                    Label("Nuovo file", systemImage: "doc.badge.plus")
-                }
-                if model.canPaste() {
-                    Divider()
-                    Button { model.paste() } label: {
-                        Label("Incolla", systemImage: "doc.on.clipboard")
-                    }
-                }
-            } else {
-                // ── Click su un file / cartella ──────────────────────────
-                let first = items.first!
+    // MARK: - Drag provider
 
-                Button { model.open(first) } label: {
-                    Label("Apri", systemImage: "arrow.right.circle")
-                }
+    private func makeDragProvider(for item: FileItem) -> NSItemProvider {
+        let urlsToDrag: [URL]
+        if model.selection.contains(item.url) && model.selection.count > 1 {
+            urlsToDrag = model.displayed
+                .filter { model.selection.contains($0.url) }
+                .map(\.url)
+        } else {
+            urlsToDrag = [item.url]
+        }
 
-                let apps = model.openWithApps(for: first)
-                if !apps.isEmpty {
-                    Menu {
-                        ForEach(apps, id: \.self) { appURL in
-                            Button(appDisplayName(appURL)) {
-                                model.open(first, with: appURL)
-                            }
-                        }
-                    } label: {
-                        Label("Apri con\u{2026}", systemImage: "ellipsis.circle")
-                    }
-                }
+        if urlsToDrag.count == 1 {
+            return NSItemProvider(object: urlsToDrag[0] as NSURL)
+        }
 
-                Divider()
-
-                Button { model.copy(items) } label: {
-                    Label("Copia", systemImage: "doc.on.doc")
-                }
-                Button { model.cut(items) } label: {
-                    Label("Taglia", systemImage: "scissors")
-                }
-                if model.canPaste() {
-                    Button { model.paste() } label: {
-                        Label("Incolla", systemImage: "doc.on.clipboard")
-                    }
-                }
-
-                Divider()
-
-                if items.count == 1 {
-                    Button { promptRename(first) } label: {
-                        Label("Rinomina", systemImage: "pencil")
-                    }
-                }
-                Button { model.compress(items) } label: {
-                    Label("Comprimi in ZIP", systemImage: "archivebox")
-                }
-
-                Divider()
-
-                Button { promptNewFolder() } label: {
-                    Label("Nuova cartella", systemImage: "folder.badge.plus")
-                }
-                Button { promptNewFile() } label: {
-                    Label("Nuovo file", systemImage: "doc.badge.plus")
-                }
-
-                Divider()
-
-                Button(role: .destructive) { confirmDelete(items) } label: {
-                    Label("Elimina", systemImage: "trash")
-                }
+        // Multi-file: encode all paths in the custom type for internal drops,
+        // plus register the first URL so Finder can accept at least one file.
+        let provider = NSItemProvider()
+        let payload = urlsToDrag.map(\.path).joined(separator: "\n")
+        if let data = payload.data(using: .utf8) {
+            provider.registerDataRepresentation(
+                forTypeIdentifier: UTType.winfinderFiles.identifier,
+                visibility: .all
+            ) { completion in
+                completion(data, nil)
+                return nil
             }
-        }, primaryAction: { ids in
-            for id in ids {
-                if let item = model.displayed.first(where: { $0.id == id }) {
-                    model.open(item)
+        }
+        provider.registerObject(urlsToDrag[0] as NSURL, visibility: .all)
+        return provider
+    }
+
+    // MARK: - Row context menu
+
+    @ViewBuilder
+    private func rowContextMenu(for item: FileItem) -> some View {
+        let selectedItems: [FileItem] = model.selection.contains(item.url)
+            ? model.displayed.filter { model.selection.contains($0.url) }
+            : [item]
+        let first = selectedItems.first ?? item
+
+        Button { model.open(first) } label: {
+            Label("Apri", systemImage: "arrow.right.circle")
+        }
+
+        let apps = model.openWithApps(for: first)
+        if !apps.isEmpty {
+            Menu {
+                ForEach(apps, id: \.self) { appURL in
+                    Button(appDisplayName(appURL)) {
+                        model.open(first, with: appURL)
+                    }
                 }
+            } label: {
+                Label("Apri con\u{2026}", systemImage: "ellipsis.circle")
             }
-        })
+        }
+
+        Divider()
+
+        Button { model.copy(selectedItems) } label: {
+            Label("Copia", systemImage: "doc.on.doc")
+        }
+        Button { model.cut(selectedItems) } label: {
+            Label("Taglia", systemImage: "scissors")
+        }
+        if model.canPaste() {
+            Button { model.paste() } label: {
+                Label("Incolla", systemImage: "doc.on.clipboard")
+            }
+        }
+
+        Divider()
+
+        if selectedItems.count == 1 {
+            Button { promptRename(first) } label: {
+                Label("Rinomina", systemImage: "pencil")
+            }
+        }
+        Button { model.compress(selectedItems) } label: {
+            Label("Comprimi in ZIP", systemImage: "archivebox")
+        }
+
+        Divider()
+
+        Button { promptNewFolder() } label: {
+            Label("Nuova cartella", systemImage: "folder.badge.plus")
+        }
+        Button { promptNewFile() } label: {
+            Label("Nuovo file", systemImage: "doc.badge.plus")
+        }
+
+        Divider()
+
+        Button(role: .destructive) { confirmDelete(selectedItems) } label: {
+            Label("Elimina", systemImage: "trash")
+        }
     }
 
     // MARK: - Status bar
@@ -293,7 +374,6 @@ struct FileListView: View {
         }
     }
 
-    /// Shows a native NSAlert with a text-field accessory.
     private func nsPrompt(
         title: String,
         message: String,
