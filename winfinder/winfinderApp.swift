@@ -13,5 +13,7 @@ struct winfinderApp: App {
         WindowGroup {
             ContentView()
         }
+        .defaultSize(width: 900, height: 600)
+        .windowResizability(.contentMinSize)
     }
 }
