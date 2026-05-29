@@ -16,7 +16,7 @@ struct FileGroupTransferable: Transferable {
     let urls: [URL]
 
     static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .winfinderFiles) { item in
+        DataRepresentation(contentType: .winfinderFiles) { item in
             item.urls.map(\.path).joined(separator: "\n").data(using: .utf8)!
         } importing: { data in
             let paths = (String(data: data, encoding: .utf8) ?? "")
