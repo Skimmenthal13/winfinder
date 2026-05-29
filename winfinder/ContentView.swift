@@ -111,9 +111,9 @@ struct FileListView: View {
                         .frame(width: 16, alignment: .center)
                     Text(item.name)
                         .lineLimit(1)
+                        .onDrag { dragProvider(for: item) }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .onDrag { dragProvider(for: item) }
             }
 
             TableColumn("Data modifica", value: \.modificationDate) { item in
