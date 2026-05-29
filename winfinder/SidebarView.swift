@@ -1,8 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SidebarView: View {
     @Bindable var model: FileExplorerModel
     @State private var selection: String? = nil
+    @State private var dropTargetPath: String? = nil
 
     private let fm = FileManager.default
 
@@ -24,25 +26,21 @@ struct SidebarView: View {
             // MARK: Preferiti
             Section("Preferiti") {
                 ForEach(favoriteItems, id: \.path) { item in
-                    Label(item.name, systemImage: item.icon)
-                        .tag(item.path)
+                    dropRow(name: item.name, icon: item.icon, path: item.path)
                 }
             }
 
             // MARK: Posizioni
             Section("Posizioni") {
-                Label(homeName, systemImage: "house.fill")
-                    .tag(homePath)
-                Label("Macintosh HD", systemImage: "internaldrive.fill")
-                    .tag("/")
+                dropRow(name: homeName, icon: "house.fill", path: homePath)
+                dropRow(name: "Macintosh HD", icon: "internaldrive.fill", path: "/")
             }
 
             // MARK: Dispositivi
             if !model.mountedVolumes.isEmpty {
                 Section("Dispositivi") {
                     ForEach(model.mountedVolumes, id: \.path) { url in
-                        Label(volumeName(url), systemImage: volumeIcon(url))
-                            .tag(url.path)
+                        dropRow(name: volumeName(url), icon: volumeIcon(url), path: url.path)
                     }
                 }
             }
@@ -52,8 +50,11 @@ struct SidebarView: View {
             if !recents.isEmpty {
                 Section("Recenti") {
                     ForEach(recents, id: \.self) { path in
-                        Label(URL(fileURLWithPath: path).lastPathComponent, systemImage: "clock")
-                            .tag(path)
+                        dropRow(
+                            name: URL(fileURLWithPath: path).lastPathComponent,
+                            icon: "clock",
+                            path: path
+                        )
                     }
                 }
             }
@@ -64,7 +65,6 @@ struct SidebarView: View {
             model.navigate(to: path)
         }
         .onChange(of: model.currentPath) { _, path in
-            // Sync highlight when navigating from the main pane
             let knownPaths: Set<String> = Set(
                 favoriteItems.map(\.path)
                 + [homePath, "/"]
@@ -75,6 +75,42 @@ struct SidebarView: View {
                 selection = path
             }
         }
+    }
+
+    // MARK: - Drop row
+
+    @ViewBuilder
+    private func dropRow(name: String, icon: String, path: String) -> some View {
+        let isTarget = dropTargetPath == path
+        Label(name, systemImage: icon)
+            .tag(path)
+            .listRowBackground(
+                isTarget
+                    ? RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.accentColor.opacity(0.25))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(Color.accentColor, lineWidth: 1.5)
+                        )
+                    : nil
+            )
+            .onDrop(
+                of: [UTType.winfinderFiles, UTType.fileURL],
+                isTargeted: Binding(
+                    get: { dropTargetPath == path },
+                    set: { active in
+                        dropTargetPath = active ? path : (dropTargetPath == path ? nil : dropTargetPath)
+                    }
+                )
+            ) { providers in
+                let shouldCopy = NSEvent.modifierFlags.contains(.command)
+                loadDroppedURLs(from: providers) { urls in
+                    guard !urls.isEmpty else { return }
+                    model.moveFiles(urls, to: path, copy: shouldCopy)
+                }
+                dropTargetPath = nil
+                return true
+            }
     }
 
     // MARK: - Helpers

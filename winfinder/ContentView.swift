@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 // MARK: - ContentView
 
@@ -25,6 +26,7 @@ struct FileListView: View {
     @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
     @State private var sortOrder = [KeyPathComparator<FileItem>]()
     @State private var selection = Set<FileItem.ID>()
+    @State private var isDropTargeted = false
 
     private static let dateFmt: DateFormatter = {
         let f = DateFormatter()
@@ -41,6 +43,24 @@ struct FileListView: View {
             Divider()
             statusBar
         }
+        .onDrop(
+            of: [UTType.winfinderFiles, UTType.fileURL],
+            isTargeted: $isDropTargeted
+        ) { providers in
+            let shouldCopy = NSEvent.modifierFlags.contains(.command)
+            loadDroppedURLs(from: providers) { urls in
+                guard !urls.isEmpty else { return }
+                model.moveFiles(urls, to: model.currentPath, copy: shouldCopy)
+            }
+            return true
+        }
+        .overlay(
+            isDropTargeted
+                ? RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(Color.accentColor, lineWidth: 2)
+                    .allowsHitTesting(false)
+                : nil
+        )
     }
 
     // MARK: - Path bar
@@ -93,12 +113,14 @@ struct FileListView: View {
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .onDrag { dragProvider(for: item) }
             }
 
             TableColumn("Data modifica", value: \.modificationDate) { item in
                 Text(Self.dateFmt.string(from: item.modificationDate))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .onDrag { dragProvider(for: item) }
             }
             .width(160)
 
@@ -106,6 +128,7 @@ struct FileListView: View {
                 Text(item.sizeFormatted)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                    .onDrag { dragProvider(for: item) }
             }
             .width(90)
         }
@@ -289,6 +312,28 @@ struct FileListView: View {
                 if !value.isEmpty { action(value) }
             }
         }
+    }
+
+    // MARK: - Drag support
+
+    private func dragProvider(for item: FileItem) -> NSItemProvider {
+        let selectedItems = selection.contains(item.id)
+            ? model.displayed.filter { selection.contains($0.id) }
+            : [item]
+        let paths = selectedItems.map { $0.url.path }.joined(separator: "\n")
+        let provider = NSItemProvider()
+        provider.registerDataRepresentation(
+            forTypeIdentifier: UTType.winfinderFiles.identifier,
+            visibility: .all
+        ) { completion in
+            completion(paths.data(using: .utf8), nil)
+            return nil
+        }
+        // Also register standard file URL so Finder can accept the drop
+        if selectedItems.count == 1, let url = selectedItems.first?.url {
+            provider.registerObject(url as NSURL, visibility: .all)
+        }
+        return provider
     }
 
     // MARK: - File icon

@@ -245,6 +245,23 @@ final class FileExplorerModel {
         reload()
     }
 
+    // MARK: - Drag and drop
+
+    func moveFiles(_ urls: [URL], to destPath: String, copy: Bool) {
+        let destDir = URL(fileURLWithPath: destPath)
+        for src in urls {
+            let dest = uniqueDestURL(for: src, in: destDir)
+            do {
+                if copy {
+                    try fm.copyItem(at: src, to: dest)
+                } else {
+                    try fm.moveItem(at: src, to: dest)
+                }
+            } catch {}
+        }
+        reload()
+    }
+
     // MARK: - Open with
 
     func openWithApps(for item: FileItem) -> [URL] {
