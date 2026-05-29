@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // MARK: - ContentView
 
@@ -23,7 +24,7 @@ struct FileListView: View {
     @Bindable var model: FileExplorerModel
     @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
     @State private var sortOrder = [KeyPathComparator<FileItem>]()
-    @State private var selection: FileItem.ID? = nil
+    @State private var selection = Set<FileItem.ID>()
 
     private static let dateFmt: DateFormatter = {
         let f = DateFormatter()
@@ -117,6 +118,85 @@ struct FileListView: View {
         .onChange(of: sortOrder) { _, order in
             model.sort(using: order)
         }
+        .contextMenu(forSelectionType: FileItem.ID.self) { ids in
+            let items = model.displayed.filter { ids.contains($0.id) }
+
+            if items.isEmpty {
+                // ── Click su area vuota ──────────────────────────────────
+                Button { promptNewFolder() } label: {
+                    Label("Nuova cartella", systemImage: "folder.badge.plus")
+                }
+                Button { promptNewFile() } label: {
+                    Label("Nuovo file", systemImage: "doc.badge.plus")
+                }
+                if model.canPaste() {
+                    Divider()
+                    Button { model.paste() } label: {
+                        Label("Incolla", systemImage: "doc.on.clipboard")
+                    }
+                }
+            } else {
+                // ── Click su un file / cartella ──────────────────────────
+                let first = items.first!
+
+                Button { model.open(first) } label: {
+                    Label("Apri", systemImage: "arrow.right.circle")
+                }
+
+                let apps = model.openWithApps(for: first)
+                if !apps.isEmpty {
+                    Menu {
+                        ForEach(apps, id: \.self) { appURL in
+                            Button(appDisplayName(appURL)) {
+                                model.open(first, with: appURL)
+                            }
+                        }
+                    } label: {
+                        Label("Apri con\u{2026}", systemImage: "ellipsis.circle")
+                    }
+                }
+
+                Divider()
+
+                Button { model.copy(items) } label: {
+                    Label("Copia", systemImage: "doc.on.doc")
+                }
+                Button { model.cut(items) } label: {
+                    Label("Taglia", systemImage: "scissors")
+                }
+                if model.canPaste() {
+                    Button { model.paste() } label: {
+                        Label("Incolla", systemImage: "doc.on.clipboard")
+                    }
+                }
+
+                Divider()
+
+                if items.count == 1 {
+                    Button { promptRename(first) } label: {
+                        Label("Rinomina", systemImage: "pencil")
+                    }
+                }
+                Button { model.compress(items) } label: {
+                    Label("Comprimi in ZIP", systemImage: "archivebox")
+                }
+
+                Divider()
+
+                Button { promptNewFolder() } label: {
+                    Label("Nuova cartella", systemImage: "folder.badge.plus")
+                }
+                Button { promptNewFile() } label: {
+                    Label("Nuovo file", systemImage: "doc.badge.plus")
+                }
+
+                Divider()
+
+                Button(role: .destructive) { confirmDelete(items) } label: {
+                    Label("Elimina", systemImage: "trash")
+                }
+            }
+        }
     }
 
     // MARK: - Status bar
@@ -127,10 +207,88 @@ struct FileListView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
+            if !selection.isEmpty {
+                Text("\(selection.count) selezionati")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
         .background(Color(NSColor.windowBackgroundColor))
+    }
+
+    // MARK: - Context menu helpers
+
+    private func promptRename(_ item: FileItem) {
+        nsPrompt(
+            title: "Rinomina",
+            message: "Nuovo nome per \"\(item.name)\":",
+            defaultValue: item.name,
+            confirmLabel: "Rinomina"
+        ) { newName in
+            if newName != item.name { model.rename(item, to: newName) }
+        }
+    }
+
+    private func promptNewFolder() {
+        nsPrompt(
+            title: "Nuova cartella",
+            message: "Nome della cartella:",
+            defaultValue: "Nuova cartella",
+            confirmLabel: "Crea"
+        ) { model.createFolder(named: $0) }
+    }
+
+    private func promptNewFile() {
+        nsPrompt(
+            title: "Nuovo file",
+            message: "Nome del file:",
+            defaultValue: "Senza titolo.txt",
+            confirmLabel: "Crea"
+        ) { model.createFile(named: $0) }
+    }
+
+    private func confirmDelete(_ items: [FileItem]) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            let alert = NSAlert()
+            let label = items.count == 1
+                ? "\"\(items[0].name)\""
+                : "\(items.count) elementi"
+            alert.messageText = "Sposta \(label) nel cestino?"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Sposta nel cestino")
+            alert.addButton(withTitle: "Annulla")
+            if alert.runModal() == .alertFirstButtonReturn {
+                model.delete(items)
+            }
+        }
+    }
+
+    /// Shows a native NSAlert with a text-field accessory.
+    private func nsPrompt(
+        title: String,
+        message: String,
+        defaultValue: String,
+        confirmLabel: String,
+        action: @escaping (String) -> Void
+    ) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            let alert = NSAlert()
+            alert.messageText = title
+            alert.informativeText = message
+            alert.addButton(withTitle: confirmLabel)
+            alert.addButton(withTitle: "Annulla")
+            let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
+            tf.stringValue = defaultValue
+            tf.selectText(nil)
+            alert.accessoryView = tf
+            alert.window.initialFirstResponder = tf
+            if alert.runModal() == .alertFirstButtonReturn {
+                let value = tf.stringValue.trimmingCharacters(in: .whitespaces)
+                if !value.isEmpty { action(value) }
+            }
+        }
     }
 
     // MARK: - File icon
@@ -150,6 +308,10 @@ struct FileListView: View {
         case "pkg", "mpkg":                                              return "shippingbox.fill"
         default:                                                         return "doc.fill"
         }
+    }
+
+    private func appDisplayName(_ url: URL) -> String {
+        url.deletingPathExtension().lastPathComponent
     }
 }
 

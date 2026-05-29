@@ -30,6 +30,7 @@ final class FileExplorerModel {
     private let fm = FileManager.default
     private let recentsKey = "winfinder.recentPaths"
     @ObservationIgnored private var volumeObservers: [NSObjectProtocol] = []
+    @ObservationIgnored private var cutURLs: Set<URL> = []
 
     init(startPath: String = FileManager.default.homeDirectoryForCurrentUser.path) {
         currentPath = startPath
@@ -139,5 +140,123 @@ final class FileExplorerModel {
             nc.addObserver(forName: NSWorkspace.didMountNotification,   object: nil, queue: nil, using: handler),
             nc.addObserver(forName: NSWorkspace.didUnmountNotification, object: nil, queue: nil, using: handler),
         ]
+    }
+
+    // MARK: - Clipboard
+
+    func copy(_ items: [FileItem]) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.writeObjects(items.map { $0.url as NSURL })
+        cutURLs = []
+    }
+
+    func cut(_ items: [FileItem]) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.writeObjects(items.map { $0.url as NSURL })
+        cutURLs = Set(items.map { $0.url })
+    }
+
+    func paste() {
+        let pb = NSPasteboard.general
+        guard let urls = pb.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) as? [URL] else { return }
+        let destDir = URL(fileURLWithPath: currentPath)
+        for src in urls {
+            let dest = uniqueDestURL(for: src, in: destDir)
+            do {
+                if cutURLs.contains(src) {
+                    try fm.moveItem(at: src, to: dest)
+                } else {
+                    try fm.copyItem(at: src, to: dest)
+                }
+            } catch {}
+        }
+        cutURLs = []
+        reload()
+    }
+
+    func canPaste() -> Bool {
+        NSPasteboard.general.canReadObject(
+            forClasses: [NSURL.self],
+            options: [NSPasteboard.ReadingOptionKey.urlReadingFileURLsOnly: true]
+        )
+    }
+
+    private func uniqueDestURL(for src: URL, in dir: URL) -> URL {
+        let base = src.deletingPathExtension().lastPathComponent
+        let ext  = src.pathExtension
+        var dest = dir.appendingPathComponent(src.lastPathComponent)
+        var n = 1
+        while fm.fileExists(atPath: dest.path) {
+            let name = ext.isEmpty ? "\(base) \(n)" : "\(base) \(n).\(ext)"
+            dest = dir.appendingPathComponent(name)
+            n += 1
+        }
+        return dest
+    }
+
+    // MARK: - File operations
+
+    func delete(_ items: [FileItem]) {
+        items.forEach { try? fm.trashItem(at: $0.url, resultingItemURL: nil) }
+        reload()
+    }
+
+    func rename(_ item: FileItem, to newName: String) {
+        let dest = item.url.deletingLastPathComponent().appendingPathComponent(newName)
+        try? fm.moveItem(at: item.url, to: dest)
+        reload()
+    }
+
+    func createFolder(named name: String) {
+        let url = URL(fileURLWithPath: currentPath).appendingPathComponent(name)
+        try? fm.createDirectory(at: url, withIntermediateDirectories: false)
+        reload()
+    }
+
+    func createFile(named name: String) {
+        let url = URL(fileURLWithPath: currentPath).appendingPathComponent(name)
+        fm.createFile(atPath: url.path, contents: nil)
+        reload()
+    }
+
+    func compress(_ items: [FileItem]) {
+        guard !items.isEmpty else { return }
+        let baseName = items.count == 1
+            ? items[0].url.deletingPathExtension().lastPathComponent
+            : "Archivio"
+        let destDir = URL(fileURLWithPath: currentPath)
+        var zipURL  = destDir.appendingPathComponent("\(baseName).zip")
+        var n = 1
+        while fm.fileExists(atPath: zipURL.path) {
+            zipURL = destDir.appendingPathComponent("\(baseName) \(n).zip")
+            n += 1
+        }
+        let process = Process()
+        process.currentDirectoryURL = destDir
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+        process.arguments = ["-r", zipURL.lastPathComponent] + items.map { $0.url.lastPathComponent }
+        try? process.run()
+        process.waitUntilExit()
+        reload()
+    }
+
+    // MARK: - Open with
+
+    func openWithApps(for item: FileItem) -> [URL] {
+        Array(NSWorkspace.shared.urlsForApplications(toOpen: item.url).prefix(15))
+    }
+
+    func open(_ item: FileItem, with appURL: URL) {
+        NSWorkspace.shared.open(
+            [item.url],
+            withApplicationAt: appURL,
+            configuration: NSWorkspace.OpenConfiguration(),
+            completionHandler: nil
+        )
     }
 }
