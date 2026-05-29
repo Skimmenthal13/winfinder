@@ -74,8 +74,25 @@ final class FileExplorerModel {
     }
 
     var displayed: [FileItem] {
-        guard !searchText.isEmpty else { return items }
-        return items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        let pattern = searchText.trimmingCharacters(in: .whitespaces)
+        guard !pattern.isEmpty else { return items }
+        return items.filter { matchesSearch($0.name, pattern: pattern) }
+    }
+
+    private func matchesSearch(_ name: String, pattern: String) -> Bool {
+        // ".pdf"  → extension == pdf
+        // "."     → any file that has an extension
+        if pattern.hasPrefix("."), !pattern.contains("*"), !pattern.contains("?") {
+            let ext    = String(pattern.dropFirst()).lowercased()
+            let nameExt = URL(fileURLWithPath: name).pathExtension.lowercased()
+            return ext.isEmpty ? !nameExt.isEmpty : nameExt == ext
+        }
+        // "doc*", "*.pdf", "*report*" → NSPredicate LIKE (supports * and ?)
+        if pattern.contains("*") || pattern.contains("?") {
+            return NSPredicate(format: "SELF LIKE[c] %@", pattern).evaluate(with: name)
+        }
+        // Plain text → substring match
+        return name.localizedCaseInsensitiveContains(pattern)
     }
 
     // MARK: - Navigation
