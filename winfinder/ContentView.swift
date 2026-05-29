@@ -27,6 +27,9 @@ struct FileListView: View {
     @State private var sortKey = "name"
     @State private var sortAscending = true
     @State private var isDropTargeted = false
+    @FocusState private var fileListFocused: Bool
+    @State private var typeSelectBuffer = ""
+    @State private var typeSelectTask: DispatchWorkItem? = nil
 
     private static let dateFmt: DateFormatter = {
         let f = DateFormatter()
@@ -188,6 +191,7 @@ struct FileListView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
+                fileListFocused = true
                 if NSEvent.modifierFlags.contains(.command) {
                     if model.selection.contains(item.url) {
                         model.selection.remove(item.url)
@@ -203,6 +207,26 @@ struct FileListView: View {
             .contextMenu { rowContextMenu(for: item) }
         }
         .listStyle(.plain)
+        .focused($fileListFocused)
+        .onKeyPress(characters: .letters.union(.decimalDigits), phases: .down) { press in
+            handleTypeToSelect(press.characters)
+            return .handled
+        }
+        .onCopyCommand {
+            let items = model.displayed.filter { model.selection.contains($0.url) }
+            guard !items.isEmpty else { return [] }
+            model.copy(items)
+            return items.map { NSItemProvider(object: $0.url as NSURL) }
+        }
+        .onCutCommand {
+            let items = model.displayed.filter { model.selection.contains($0.url) }
+            guard !items.isEmpty else { return [] }
+            model.cut(items)
+            return items.map { NSItemProvider(object: $0.url as NSURL) }
+        }
+        .onPasteCommand(of: [UTType.fileURL]) { _ in
+            model.paste()
+        }
         .contextMenu {
             Button { promptNewFolder() } label: {
                 Label("Nuova cartella", systemImage: "folder.badge.plus")
@@ -217,6 +241,20 @@ struct FileListView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Type-to-select
+
+    private func handleTypeToSelect(_ character: String) {
+        typeSelectTask?.cancel()
+        typeSelectBuffer += character.lowercased()
+        let buf = typeSelectBuffer
+        if let match = model.displayed.first(where: { $0.name.lowercased().hasPrefix(buf) }) {
+            model.selection = [match.url]
+        }
+        let task = DispatchWorkItem { self.typeSelectBuffer = "" }
+        typeSelectTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: task)
     }
 
     // MARK: - Drag provider
