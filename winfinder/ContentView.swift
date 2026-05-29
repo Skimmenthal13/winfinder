@@ -30,6 +30,7 @@ struct FileListView: View {
     @FocusState private var fileListFocused: Bool
     @State private var typeSelectBuffer = ""
     @State private var typeSelectTask: DispatchWorkItem? = nil
+    @State private var anchorURL: URL? = nil
 
     private static let dateFmt: DateFormatter = {
         let f = DateFormatter()
@@ -193,14 +194,31 @@ struct FileListView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 fileListFocused = true
-                if NSEvent.modifierFlags.contains(.command) {
+                let mods = NSEvent.modifierFlags
+                if mods.contains(.shift) {
+                    // Range selection between anchor and this item.
+                    if let anchor = anchorURL,
+                       let anchorIdx = model.displayed.firstIndex(where: { $0.url == anchor }),
+                       let currentIdx = model.displayed.firstIndex(where: { $0.url == item.url }) {
+                        let lo = min(anchorIdx, currentIdx)
+                        let hi = max(anchorIdx, currentIdx)
+                        model.selection = Set(model.displayed[lo...hi].map(\.url))
+                    } else {
+                        // No anchor yet: treat as plain click and set anchor.
+                        model.selection = [item.url]
+                        anchorURL = item.url
+                    }
+                    // Shift+click never moves the anchor.
+                } else if mods.contains(.command) {
                     if model.selection.contains(item.url) {
                         model.selection.remove(item.url)
                     } else {
                         model.selection.insert(item.url)
                     }
+                    anchorURL = item.url
                 } else {
                     model.selection = [item.url]
+                    anchorURL = item.url
                 }
             }
             .simultaneousGesture(TapGesture(count: 2).onEnded { model.open(item) })
