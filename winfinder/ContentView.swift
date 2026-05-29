@@ -22,7 +22,7 @@ final class FileExplorerModel {
 
     private let fm = FileManager.default
 
-    init(startPath: String = NSHomeDirectory()) {
+    init(startPath: String = FileManager.default.homeDirectoryForCurrentUser.path) {
         currentPath = startPath
         reload()
     }
@@ -88,7 +88,7 @@ final class FileExplorerModel {
 
 struct ContentView: View {
     @State private var model = FileExplorerModel()
-    @State private var pathInput = NSHomeDirectory()
+    @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
     @State private var sortOrder = [KeyPathComparator<FileItem>]()
     @State private var selection: FileItem.ID? = nil
 
