@@ -93,16 +93,12 @@ struct FileListView: View {
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture(count: 2) { model.open(item) }
             }
 
             TableColumn("Data modifica", value: \.modificationDate) { item in
                 Text(Self.dateFmt.string(from: item.modificationDate))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { model.open(item) }
             }
             .width(160)
 
@@ -110,15 +106,13 @@ struct FileListView: View {
                 Text(item.sizeFormatted)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { model.open(item) }
             }
             .width(90)
         }
         .onChange(of: sortOrder) { _, order in
             model.sort(using: order)
         }
-        .contextMenu(forSelectionType: FileItem.ID.self) { ids in
+        .contextMenu(forSelectionType: FileItem.ID.self, menu: { ids in
             let items = model.displayed.filter { ids.contains($0.id) }
 
             if items.isEmpty {
@@ -196,7 +190,13 @@ struct FileListView: View {
                     Label("Elimina", systemImage: "trash")
                 }
             }
-        }
+        }, primaryAction: { ids in
+            for id in ids {
+                if let item = model.displayed.first(where: { $0.id == id }) {
+                    model.open(item)
+                }
+            }
+        })
     }
 
     // MARK: - Status bar
