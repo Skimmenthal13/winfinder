@@ -28,7 +28,7 @@ Win Finder lo soluciona. Es un gestor de archivos nativo para macOS construido a
 - **AirDrop** desde el clic derecho — comparte cualquier archivo directamente sin abrir el Finder.
 - **Monitoreo del sistema de archivos en tiempo real** — la lista se actualiza automáticamente cuando los archivos cambian en disco.
 - **Sistema de extensiones** — añade acciones personalizadas al menú contextual mediante archivos JSON. Soporta submenús anidados, separadores, iconos personalizados y filtrado por contexto. Gestiona todo desde **Win Finder → Gestionar extensiones**.
-- **Multiidioma** — disponible en inglés 🇬🇧, italiano 🇮🇹, alemán 🇩🇪, español 🇪🇸 y chino simplificado 🇨🇳. El idioma de la interfaz sigue automáticamente el idioma del sistema.
+- **Multiidioma** — disponible en inglés 🇬🇧, italiano 🇮🇹, alemán 🇩🇪, español 🇪🇸, chino simplificado 🇨🇳 y malgache 🇲🇬 ❤️. El idioma de la interfaz sigue automáticamente el idioma del sistema.
 
 ## Sistema de extensiones
 

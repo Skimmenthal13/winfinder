@@ -28,7 +28,7 @@ Win Finder mamaha izany. Izy io dia mpitantana rakitra macOS teratany naorina ma
 - **AirDrop** avy amin'ny kilik-kavanana — zarao mivantana ny rakitra rehetra tsy misokatra ny Finder.
 - **Fanaraha-maso ny rafitra rakitra amin'ny fotoana tena izy** — ny lisitra mavaivay ho azy rehefa miovaova ny rakitra amin'ny disque.
 - **Rafitra fanitarana** — ampio ny hetsika custom amin'ny menio fifehezana amin'ny alalan'ny rakitra JSON. Manohana submenio mifanakatona, misaraka, ikona custom, ary fanamafisana ara-tontolon'andro. Tantano ny zavatra rehetra avy amin'ny **Win Finder → Tantano ny fanitarana**.
-- **Amin'ny fiteny maro** — misy amin'ny anglisy 🇬🇧, italiana 🇮🇹, alemà 🇩🇪, espaniola 🇪🇸, sinoa tsotra 🇨🇳 ary malagasy 🇲🇬. Ny fiteny an'ny interface manaraka ny fiteny an'ny rafitra ho azy.
+- **Amin'ny fiteny maro** — misy amin'ny anglisy 🇬🇧, italiana 🇮🇹, alemà 🇩🇪, espaniola 🇪🇸, sinoa tsotra 🇨🇳 ary malagasy 🇲🇬 ❤️. Ny fiteny an'ny interface manaraka ny fiteny an'ny rafitra ho azy.
 
 ## Rafitra fanitarana
 

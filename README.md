@@ -28,7 +28,7 @@ Win Finder fixes that. It's a native macOS file manager built around the workflo
 - **AirDrop** from right-click — share any file directly without opening Finder.
 - **Real-time file system monitoring** — the list updates automatically when files change on disk.
 - **Extension system** — add custom actions to the right-click menu via JSON files. Supports nested submenus, separators, custom icons, and context filtering. Manage everything from **Win Finder → Manage Extensions**.
-- **Multilanguage** — available in English 🇬🇧, Italian 🇮🇹, German 🇩🇪, Spanish 🇪🇸, and Simplified Chinese 🇨🇳. The interface language follows the system language automatically.
+- **Multilanguage** — available in English 🇬🇧, Italian 🇮🇹, German 🇩🇪, Spanish 🇪🇸, Simplified Chinese 🇨🇳, and Malagasy 🇲🇬 ❤️. The interface language follows the system language automatically.
 
 ## Extension system
 
