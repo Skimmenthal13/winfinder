@@ -12,6 +12,10 @@ struct FileItem: Identifiable {
     let size: Int64
     let isDirectory: Bool
 
+    var displayName: String { name.replacingOccurrences(of: ":", with: "/") }
+
+    var icon: NSImage { NSWorkspace.shared.icon(forFile: url.path) }
+
     var sizeFormatted: String {
         guard !isDirectory else { return "" }
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)

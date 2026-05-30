@@ -65,3 +65,7 @@ MIT — do whatever you want with it.
 ---
 
 Built by [@Skimmenthal13](https://github.com/Skimmenthal13) — a Windows refugee who got tired of fighting the Finder.
+
+## Credits
+
+File type icons in the file list are from the [file-icon-vectors](https://github.com/dmhendricks/file-icon-vectors) project (Vivid set) by Daniel M. Hendricks, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).

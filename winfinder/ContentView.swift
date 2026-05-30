@@ -136,8 +136,15 @@ struct FileListView: View {
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 2) {
                 ForEach(Array(components.enumerated()), id: \.offset) { idx, component in
-                    Button(component.name) {
+                    Button {
                         model.navigate(to: component.path)
+                    } label: {
+                        if idx == 0 {
+                            Image(systemName: "externaldrive.fill")
+                                .font(.caption)
+                        } else {
+                            Text(component.name)
+                        }
                     }
                     .buttonStyle(.plain)
                     .font(.system(.body))
@@ -185,18 +192,15 @@ struct FileListView: View {
     }
 
     private func pathComponents() -> [(name: String, path: String)] {
-        var parts: [(name: String, path: String)] = []
-        var current = URL(fileURLWithPath: model.currentPath).standardized
-        while true {
-            let parent = current.deletingLastPathComponent()
-            if parent.path == current.path {
-                parts.append((name: "/", path: current.path))
-                break
-            }
-            parts.append((name: current.lastPathComponent, path: current.path))
-            current = parent
+        let path = model.currentPath
+        var result: [(name: String, path: String)] = []
+        var accumulated = ""
+        for part in path.split(separator: "/", omittingEmptySubsequences: true) {
+            accumulated += "/" + part
+            result.append((name: String(part), path: accumulated))
         }
-        return parts.reversed()
+        result.insert((name: "/", path: "/"), at: 0)
+        return result
     }
 
     private func subdirectories(at path: String) -> [String] {
@@ -273,10 +277,8 @@ struct FileListView: View {
         List(model.displayed, id: \.id, selection: $model.selection) { item in
             HStack(spacing: 0) {
                 HStack(spacing: 6) {
-                    Image(systemName: item.isDirectory ? "folder.fill" : fileIcon(for: item.url))
-                        .foregroundStyle(item.isDirectory ? Color.accentColor : Color.secondary)
-                        .frame(width: 16, alignment: .center)
-                    Text(item.name)
+                    fileItemIcon(for: item)
+                    Text(item.displayName)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -366,6 +368,29 @@ struct FileListView: View {
             scrollToURL = nil
         }
         } // ScrollViewReader
+    }
+
+    // MARK: - File item icon
+
+    @ViewBuilder
+    private func fileItemIcon(for item: FileItem) -> some View {
+        if item.isDirectory {
+            Image(systemName: "folder.fill")
+                .foregroundStyle(Color(red: 1, green: 214/255, blue: 10/255))
+                .frame(width: 20, height: 20)
+        } else {
+            let ext = item.url.pathExtension.lowercased()
+            let assetName = "viv-\(ext)"
+            if !ext.isEmpty, let img = NSImage(named: assetName) {
+                Image(nsImage: img)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 20, height: 20)
+            } else {
+                FileIconView(url: item.url)
+                    .frame(width: 20, height: 20)
+            }
+        }
     }
 
     // MARK: - Type-to-select
@@ -534,8 +559,8 @@ struct FileListView: View {
     private func promptRename(_ item: FileItem) {
         nsPrompt(
             title: "Rinomina",
-            message: "Nuovo nome per \"\(item.name)\":",
-            defaultValue: item.name,
+            message: "Nuovo nome per \"\(item.displayName)\":",
+            defaultValue: item.displayName,
             confirmLabel: "Rinomina"
         ) { newName in
             if newName != item.name { model.rename(item, to: newName) }
@@ -611,25 +636,28 @@ struct FileListView: View {
 
     // MARK: - File icon
 
-    private func fileIcon(for url: URL) -> String {
-        switch url.pathExtension.lowercased() {
-        case "pdf":                                                      return "doc.richtext.fill"
-        case "png", "jpg", "jpeg", "gif", "heic", "tiff", "webp",
-             "bmp", "svg":                                               return "photo.fill"
-        case "mp4", "mov", "avi", "mkv", "m4v":                         return "film.fill"
-        case "mp3", "aac", "flac", "m4a", "wav":                        return "music.note"
-        case "zip", "tar", "gz", "bz2", "7z", "rar":                    return "archivebox.fill"
-        case "swift", "py", "js", "ts", "go", "rs",
-             "cpp", "c", "h", "java", "rb", "kt":                       return "doc.text.fill"
-        case "app":                                                      return "app.fill"
-        case "dmg":                                                      return "externaldrive.fill"
-        case "pkg", "mpkg":                                              return "shippingbox.fill"
-        default:                                                         return "doc.fill"
-        }
-    }
-
     private func appDisplayName(_ url: URL) -> String {
         url.deletingPathExtension().lastPathComponent
+    }
+}
+
+// MARK: - FileIconView
+
+struct FileIconView: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> NSImageView {
+        let view = NSImageView()
+        view.imageScaling = .scaleProportionallyUpOrDown
+        view.imageAlignment = .alignCenter
+        view.wantsLayer = true
+        view.layer?.contentsGravity = .resizeAspect
+        view.image = NSWorkspace.shared.icon(forFile: url.path)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSImageView, context: Context) {
+        nsView.image = NSWorkspace.shared.icon(forFile: url.path)
     }
 }
 
