@@ -2,7 +2,7 @@
 
 Mpitantana rakitra ho an'ny macOS izay mahatsapa toy ny any an-trano — ho an'izay avy amin'ny Windows.
 
-🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 [Deutsch](README.de.md) &nbsp; 🇪🇸 [Español](README.es.md) &nbsp; 🇨🇳 [中文](README.zh.md) &nbsp; 🇲🇬 Malagasy
+🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 [Deutsch](README.de.md) &nbsp; 🇪🇸 [Español](README.es.md) &nbsp; 🇨🇳 [中文](README.zh.md) &nbsp; 🇲🇬 Malagasy ❤️
 
 ![Win Finder screenshot](docs/screenshot.png)
 
