@@ -93,7 +93,7 @@ Then press `Cmd+R` in Xcode to build and run.
 - [ ] Column resizing
 - [ ] Icon view and thumbnail preview
 - [ ] Keyboard shortcut customization
-- [ ] Multilanguage support — English, Italian, German, Spanish, Simplified Chinese
+- [x] Multilanguage support — English, Italian, German, Spanish, Simplified Chinese
 - [ ] Community extension library — a separate repo with ready-made JSON actions for popular apps (VS Code, iTerm2, Git, FFmpeg...)
 - [ ] **"Open with Win Finder"** in Finder's right-click menu — Finder Sync Extension that adds "Open with Win Finder" to the Finder context menu and registers Win Finder as a handler for `public.folder`
 - [ ] **WinFinderPicker** — allow third-party developers to use Win Finder as an alternative file picker in their own apps. Two approaches under evaluation: a **Swift Package (SPM)** that developers import directly, or an **XPC Service** that Win Finder exposes as a system service invoked via IPC. The best approach will be chosen based on architecture and developer experience.
