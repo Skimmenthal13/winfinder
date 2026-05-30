@@ -1,0 +1,80 @@
+/* General */
+"Cancel" = "Abbrechen";
+"Create" = "Erstellen";
+"Save" = "Sichern";
+"Remove" = "Entfernen";
+"Close" = "Schliessen";
+"Edit" = "Bearbeiten";
+"Delete" = "Loschen";
+"Rename" = "Umbenennen";
+"Path" = "Pfad";
+"Search" = "Suchen";
+"Choose…" = "Wahlen…";
+"Choose Icon" = "Symbol wahlen";
+
+/* File list columns */
+"Name" = "Name";
+"Date Modified" = "Anderungsdatum";
+"Size" = "Grosse";
+
+/* Status bar */
+"%lld items" = "%lld Elemente";
+"%lld selected" = "%lld ausgewahlt";
+
+/* Context menu */
+"Open" = "Offnen";
+"Open With…" = "Offnen mit…";
+"AirDrop" = "AirDrop";
+"Copy" = "Kopieren";
+"Cut" = "Ausschneiden";
+"Paste" = "Einsetzen";
+"Compress to ZIP" = "Als ZIP komprimieren";
+"New Folder" = "Neuer Ordner";
+"New File" = "Neue Datei";
+
+/* Alerts and prompts */
+"Move %@ to Trash?" = "%@ in den Papierkorb verschieben?";
+"Move to Trash" = "In den Papierkorb";
+"New name for \"%@\":" = "Neuer Name fur \"%@\":";
+"Folder name:" = "Ordnername:";
+"Untitled.txt" = "Ohne Titel.txt";
+"File name:" = "Dateiname:";
+
+/* Extensions manager */
+"Extensions" = "Erweiterungen";
+"No extensions" = "Keine Erweiterungen";
+"Add JSON files to\n~/.config/winfinder/actions/" = "JSON-Dateien hinzufugen in\n~/.config/winfinder/actions/";
+"Folder" = "Ordner";
+"JSON File" = "JSON-Datei";
+"New Extension" = "Neue Erweiterung";
+"Edit Extension" = "Erweiterung bearbeiten";
+"Open Folder" = "Ordner offnen";
+"Delete \"%@\"?" = "\"%@\" loschen?";
+"Manage Extensions…" = "Erweiterungen verwalten…";
+
+/* Extension form */
+"Action type" = "Aktionstyp";
+"Icon" = "Symbol";
+"Select at least one context." = "Mindestens einen Kontext auswahlen.";
+"Menu items" = "Menueinträge";
+"Add item" = "Eintrag hinzufugen";
+"Item name" = "Eintragsname";
+"Command {file}" = "Befehl {file}";
+"Submenu name" = "Untermenuname";
+"Add child item" = "Unterelement hinzufugen";
+"Change icon" = "Symbol andern";
+"Remove icon" = "Symbol entfernen";
+"Choose icon" = "Symbol wahlen";
+"E.g. Open with TextEdit" = "z.B. Mit TextEdit offnen";
+"pdf, txt, * (all)" = "pdf, txt, * (alle)";
+"Context" = "Kontext";
+"File" = "Datei";
+"Background" = "Hintergrund";
+
+/* Menu node types */
+"Command" = "Befehl";
+"Separator" = "Trennlinie";
+"Submenu" = "Untermenu";
+
+/* Model errors */
+"Enter a command or at least one submenu item." = "Gib einen Befehl oder mindestens einen Untermenueintrag ein.";

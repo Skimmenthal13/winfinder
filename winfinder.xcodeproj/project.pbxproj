@@ -25,8 +25,8 @@
 
 /* Begin PBXFileReference section */
 		A49670BE2FC9DF4F00CB1007 /* Win Finder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Win Finder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A49670CB2FC9DF5100CB1007 /* winfinderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = winfinderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A49670D52FC9DF5100CB1007 /* winfinderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = winfinderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A49670CB2FC9DF5100CB1007 /* winfinderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = winfinderTests.xctest; path = "Win Finder.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A49670D52FC9DF5100CB1007 /* winfinderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = winfinderUITests.xctest; path = "Win Finder.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -85,7 +85,7 @@
 		A49670BF2FC9DF4F00CB1007 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A49670BE2FC9DF4F00CB1007 /* winfinder.app */,
+				A49670BE2FC9DF4F00CB1007 /* Win Finder.app */,
 				A49670CB2FC9DF5100CB1007 /* winfinderTests.xctest */,
 				A49670D52FC9DF5100CB1007 /* winfinderUITests.xctest */,
 			);
@@ -114,7 +114,7 @@
 			packageProductDependencies = (
 			);
 			productName = winfinder;
-			productReference = A49670BE2FC9DF4F00CB1007 /* winfinder.app */;
+			productReference = A49670BE2FC9DF4F00CB1007 /* Win Finder.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A49670CA2FC9DF5100CB1007 /* winfinderTests */ = {
@@ -192,6 +192,10 @@
 			knownRegions = (
 				en,
 				Base,
+				it,
+				"zh-Hans",
+				de,
+				es,
 			);
 			mainGroup = A49670B52FC9DF4F00CB1007;
 			minimizedProjectReferenceProxies = 1;

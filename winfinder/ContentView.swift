@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @State private var model = FileExplorerModel()
     @State private var columnVisibility = NavigationSplitViewVisibility.all
+    @State private var showExtensionsManager = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -16,6 +17,12 @@ struct ContentView: View {
             FileListView(model: model)
         }
         .frame(minWidth: 800, minHeight: 450)
+        .sheet(isPresented: $showExtensionsManager) {
+            ExtensionsManagerView(model: model)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .openExtensionsManager)) { _ in
+            showExtensionsManager = true
+        }
     }
 }
 
@@ -119,7 +126,7 @@ struct FileListView: View {
                 TextField(
                     "",
                     text: $model.searchText,
-                    prompt: Text("\(Image(systemName: "magnifyingglass")) Cerca")
+                    prompt: Text("\(Image(systemName: "magnifyingglass")) ") + Text("Search")
                 )
                 .textFieldStyle(.roundedBorder)
                 .frame(width: max(0, fieldsWidth * 0.2))
@@ -221,12 +228,12 @@ struct FileListView: View {
 
     private var columnHeader: some View {
         HStack(spacing: 0) {
-            headerButton("Nome", key: "name")
+            headerButton("Name", key: "name")
             Divider().frame(height: 14)
-            headerButton("Data modifica", key: "date")
+            headerButton("Date Modified", key: "date")
                 .frame(width: dateColumnWidth)
             Divider().frame(height: 14)
-            headerButton("Dimensione", key: "size")
+            headerButton("Size", key: "size")
                 .frame(width: sizeColumnWidth)
         }
         .frame(height: 26)
@@ -278,8 +285,16 @@ struct FileListView: View {
             HStack(spacing: 0) {
                 HStack(spacing: 6) {
                     fileItemIcon(for: item)
-                    Text(item.displayName)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(item.displayName)
+                            .lineLimit(1)
+                        if let path = item.relativePath {
+                            Text(path)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -348,15 +363,22 @@ struct FileListView: View {
         }
         .contextMenu {
             Button { promptNewFolder() } label: {
-                Label("Nuova cartella", systemImage: "folder.badge.plus")
+                Label("New Folder", systemImage: "folder.badge.plus")
             }
             Button { promptNewFile() } label: {
-                Label("Nuovo file", systemImage: "doc.badge.plus")
+                Label("New File", systemImage: "doc.badge.plus")
             }
             if model.canPaste() {
                 Divider()
                 Button { model.paste() } label: {
-                    Label("Incolla", systemImage: "doc.on.clipboard")
+                    Label("Paste", systemImage: "doc.on.clipboard")
+                }
+            }
+            let bgActions = model.customActions.filter { $0.matchesContext(.background) }
+            if !bgActions.isEmpty {
+                Divider()
+                ForEach(Array(bgActions.enumerated()), id: \.offset) { _, action in
+                    topLevelAction(action, paths: [model.currentPath])
                 }
             }
         }
@@ -377,18 +399,20 @@ struct FileListView: View {
         if item.isDirectory {
             Image(systemName: "folder.fill")
                 .foregroundStyle(Color(red: 1, green: 214/255, blue: 10/255))
-                .frame(width: 20, height: 20)
+                .frame(width: 16, height: 16)
         } else {
             let ext = item.url.pathExtension.lowercased()
             let assetName = "viv-\(ext)"
             if !ext.isEmpty, let img = NSImage(named: assetName) {
                 Image(nsImage: img)
-                    .resizable()
                     .interpolation(.high)
-                    .frame(width: 20, height: 20)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
             } else {
-                FileIconView(url: item.url)
-                    .frame(width: 20, height: 20)
+                Image(systemName: "doc.fill")
+                    .foregroundStyle(.secondary)
+                    .frame(width: 16, height: 16)
             }
         }
     }
@@ -461,6 +485,85 @@ struct FileListView: View {
         return provider
     }
 
+    // MARK: - Custom action execution
+
+    private func executeAction(_ command: String, file: String) {
+        let escaped = "'" + file.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        let cmd = command.replacingOccurrences(of: "{file}", with: escaped)
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/sh")
+        proc.arguments = ["-c", cmd]
+        try? proc.run()
+    }
+
+    private static let transparentIcon: NSImage = {
+        let img = NSImage(size: NSSize(width: 16, height: 16))
+        img.lockFocus()
+        NSColor.clear.setFill()
+        NSRect(origin: .zero, size: img.size).fill(using: .copy)
+        img.unlockFocus()
+        return img
+    }()
+
+    private func actionLabel(name: String, icon: NSImage?) -> some View {
+        Label {
+            Text(name)
+        } icon: {
+            Image(nsImage: icon ?? Self.transparentIcon)
+                .interpolation(.high)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+        }
+    }
+
+    private func menuItem(_ item: WFMenuItem, paths: [String]) -> AnyView {
+        switch item {
+        case .separator:
+            return AnyView(Divider())
+        case .action(let name, let icon, let content):
+            switch content {
+            case .command(let cmd):
+                return AnyView(
+                    Button {
+                        paths.forEach { executeAction(cmd, file: $0) }
+                    } label: {
+                        actionLabel(name: name, icon: icon)
+                    }
+                )
+            case .submenu(let sub):
+                return AnyView(
+                    Menu {
+                        ForEach(Array(sub.enumerated()), id: \.offset) { _, child in
+                            self.menuItem(child, paths: paths)
+                        }
+                    } label: {
+                        actionLabel(name: name, icon: icon)
+                    }
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func topLevelAction(_ action: WFAction, paths: [String]) -> some View {
+        if case .command(let cmd) = action.content {
+            Button {
+                paths.forEach { executeAction(cmd, file: $0) }
+            } label: {
+                actionLabel(name: action.name, icon: action.icon)
+            }
+        } else if case .submenu(let items) = action.content {
+            Menu {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    menuItem(item, paths: paths)
+                }
+            } label: {
+                actionLabel(name: action.name, icon: action.icon)
+            }
+        }
+    }
+
     // MARK: - Row context menu
 
     @ViewBuilder
@@ -471,7 +574,7 @@ struct FileListView: View {
         let first = selectedItems.first ?? item
 
         Button { model.open(first) } label: {
-            Label("Apri", systemImage: "arrow.right.circle")
+            Label("Open", systemImage: "arrow.right.circle")
         }
 
         let apps = model.openWithApps(for: first)
@@ -483,7 +586,7 @@ struct FileListView: View {
                     }
                 }
             } label: {
-                Label("Apri con\u{2026}", systemImage: "ellipsis.circle")
+                Label("Open With…", systemImage: "ellipsis.circle")
             }
         }
 
@@ -497,14 +600,14 @@ struct FileListView: View {
         Divider()
 
         Button { model.copy(selectedItems) } label: {
-            Label("Copia", systemImage: "doc.on.doc")
+            Label("Copy", systemImage: "doc.on.doc")
         }
         Button { model.cut(selectedItems) } label: {
-            Label("Taglia", systemImage: "scissors")
+            Label("Cut", systemImage: "scissors")
         }
         if model.canPaste() {
             Button { model.paste() } label: {
-                Label("Incolla", systemImage: "doc.on.clipboard")
+                Label("Paste", systemImage: "doc.on.clipboard")
             }
         }
 
@@ -512,26 +615,36 @@ struct FileListView: View {
 
         if selectedItems.count == 1 {
             Button { promptRename(first) } label: {
-                Label("Rinomina", systemImage: "pencil")
+                Label("Rename", systemImage: "pencil")
             }
         }
         Button { model.compress(selectedItems) } label: {
-            Label("Comprimi in ZIP", systemImage: "archivebox")
+            Label("Compress to ZIP", systemImage: "archivebox")
         }
 
         Divider()
 
         Button { promptNewFolder() } label: {
-            Label("Nuova cartella", systemImage: "folder.badge.plus")
+            Label("New Folder", systemImage: "folder.badge.plus")
         }
         Button { promptNewFile() } label: {
-            Label("Nuovo file", systemImage: "doc.badge.plus")
+            Label("New File", systemImage: "doc.badge.plus")
+        }
+
+        let ext = first.url.pathExtension
+        let ctx: WFActionContext = first.isDirectory ? .folder : .file
+        let matching = model.customActions.filter { $0.matches(ext: ext, context: ctx) }
+        if !matching.isEmpty {
+            Divider()
+            ForEach(Array(matching.enumerated()), id: \.offset) { _, action in
+                topLevelAction(action, paths: selectedItems.map { $0.url.path })
+            }
         }
 
         Divider()
 
         Button(role: .destructive) { confirmDelete(selectedItems) } label: {
-            Label("Elimina", systemImage: "trash")
+            Label("Delete", systemImage: "trash")
         }
     }
 
@@ -539,12 +652,12 @@ struct FileListView: View {
 
     private var statusBar: some View {
         HStack {
-            Text("\(model.displayed.count) elementi")
+            Text("\(model.displayed.count) items")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
             if !model.selection.isEmpty {
-                Text("\(model.selection.count) selezionati")
+                Text("\(model.selection.count) selected")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -558,10 +671,10 @@ struct FileListView: View {
 
     private func promptRename(_ item: FileItem) {
         nsPrompt(
-            title: "Rinomina",
-            message: "Nuovo nome per \"\(item.displayName)\":",
+            title: String(localized: "Rename"),
+            message: String(format: String(localized: "New name for \"%@\":"), item.displayName),
             defaultValue: item.displayName,
-            confirmLabel: "Rinomina"
+            confirmLabel: String(localized: "Rename")
         ) { newName in
             if newName != item.name { model.rename(item, to: newName) }
         }
@@ -569,19 +682,19 @@ struct FileListView: View {
 
     private func promptNewFolder() {
         nsPrompt(
-            title: "Nuova cartella",
-            message: "Nome della cartella:",
-            defaultValue: "Nuova cartella",
-            confirmLabel: "Crea"
+            title: String(localized: "New Folder"),
+            message: String(localized: "Folder name:"),
+            defaultValue: String(localized: "New Folder"),
+            confirmLabel: String(localized: "Create")
         ) { model.createFolder(named: $0) }
     }
 
     private func promptNewFile() {
         nsPrompt(
-            title: "Nuovo file",
-            message: "Nome del file:",
-            defaultValue: "Senza titolo.txt",
-            confirmLabel: "Crea"
+            title: String(localized: "New File"),
+            message: String(localized: "File name:"),
+            defaultValue: String(localized: "Untitled.txt"),
+            confirmLabel: String(localized: "Create")
         ) { model.createFile(named: $0) }
     }
 
@@ -590,11 +703,11 @@ struct FileListView: View {
             let alert = NSAlert()
             let label = items.count == 1
                 ? "\"\(items[0].name)\""
-                : "\(items.count) elementi"
-            alert.messageText = "Sposta \(label) nel cestino?"
+                : String(format: String(localized: "%lld items"), Int64(items.count))
+            alert.messageText = String(format: String(localized: "Move %@ to Trash?"), label)
             alert.alertStyle = .warning
-            alert.addButton(withTitle: "Sposta nel cestino")
-            alert.addButton(withTitle: "Annulla")
+            alert.addButton(withTitle: String(localized: "Move to Trash"))
+            alert.addButton(withTitle: String(localized: "Cancel"))
             if alert.runModal() == .alertFirstButtonReturn {
                 model.delete(items)
             }
@@ -613,7 +726,7 @@ struct FileListView: View {
             alert.messageText = title
             alert.informativeText = message
             alert.addButton(withTitle: confirmLabel)
-            alert.addButton(withTitle: "Annulla")
+            alert.addButton(withTitle: String(localized: "Cancel"))
             let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
             tf.stringValue = defaultValue
             alert.accessoryView = tf

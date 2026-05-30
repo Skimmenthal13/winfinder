@@ -1,0 +1,80 @@
+/* General */
+"Cancel" = "Cancel";
+"Create" = "Create";
+"Save" = "Save";
+"Remove" = "Remove";
+"Close" = "Close";
+"Edit" = "Edit";
+"Delete" = "Delete";
+"Rename" = "Rename";
+"Path" = "Path";
+"Search" = "Search";
+"Choose…" = "Choose…";
+"Choose Icon" = "Choose Icon";
+
+/* File list columns */
+"Name" = "Name";
+"Date Modified" = "Date Modified";
+"Size" = "Size";
+
+/* Status bar */
+"%lld items" = "%lld items";
+"%lld selected" = "%lld selected";
+
+/* Context menu */
+"Open" = "Open";
+"Open With…" = "Open With…";
+"AirDrop" = "AirDrop";
+"Copy" = "Copy";
+"Cut" = "Cut";
+"Paste" = "Paste";
+"Compress to ZIP" = "Compress to ZIP";
+"New Folder" = "New Folder";
+"New File" = "New File";
+
+/* Alerts and prompts */
+"Move %@ to Trash?" = "Move %@ to Trash?";
+"Move to Trash" = "Move to Trash";
+"New name for \"%@\":" = "New name for \"%@\":";
+"Folder name:" = "Folder name:";
+"Untitled.txt" = "Untitled.txt";
+"File name:" = "File name:";
+
+/* Extensions manager */
+"Extensions" = "Extensions";
+"No extensions" = "No extensions";
+"Add JSON files to\n~/.config/winfinder/actions/" = "Add JSON files to\n~/.config/winfinder/actions/";
+"Folder" = "Folder";
+"JSON File" = "JSON File";
+"New Extension" = "New Extension";
+"Edit Extension" = "Edit Extension";
+"Open Folder" = "Open Folder";
+"Delete \"%@\"?" = "Delete \"%@\"?";
+"Manage Extensions…" = "Manage Extensions…";
+
+/* Extension form */
+"Action type" = "Action type";
+"Icon" = "Icon";
+"Select at least one context." = "Select at least one context.";
+"Menu items" = "Menu items";
+"Add item" = "Add item";
+"Item name" = "Item name";
+"Command {file}" = "Command {file}";
+"Submenu name" = "Submenu name";
+"Add child item" = "Add child item";
+"Change icon" = "Change icon";
+"Remove icon" = "Remove icon";
+"Choose icon" = "Choose icon";
+"E.g. Open with TextEdit" = "E.g. Open with TextEdit";
+"pdf, txt, * (all)" = "pdf, txt, * (all)";
+"Context" = "Context";
+"File" = "File";
+"Background" = "Background";
+
+/* Menu node types */
+"Command" = "Command";
+"Separator" = "Separator";
+"Submenu" = "Submenu";
+
+/* Model errors */
+"Enter a command or at least one submenu item." = "Enter a command or at least one submenu item.";

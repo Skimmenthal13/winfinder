@@ -1,0 +1,80 @@
+/* General */
+"Cancel" = "取消";
+"Create" = "创建";
+"Save" = "存储";
+"Remove" = "移除";
+"Close" = "关闭";
+"Edit" = "编辑";
+"Delete" = "删除";
+"Rename" = "重命名";
+"Path" = "路径";
+"Search" = "搜索";
+"Choose…" = "选择…";
+"Choose Icon" = "选择图标";
+
+/* File list columns */
+"Name" = "名称";
+"Date Modified" = "修改日期";
+"Size" = "大小";
+
+/* Status bar */
+"%lld items" = "%lld 个项目";
+"%lld selected" = "已选择 %lld 个";
+
+/* Context menu */
+"Open" = "打开";
+"Open With…" = "打开方式…";
+"AirDrop" = "隔空投送";
+"Copy" = "拷贝";
+"Cut" = "剪切";
+"Paste" = "粘贴";
+"Compress to ZIP" = "压缩为 ZIP";
+"New Folder" = "新建文件夹";
+"New File" = "新建文件";
+
+/* Alerts and prompts */
+"Move %@ to Trash?" = "将 %@ 移到废纸篓？";
+"Move to Trash" = "移到废纸篓";
+"New name for \"%@\":" = "「%@」的新名称：";
+"Folder name:" = "文件夹名称：";
+"Untitled.txt" = "未命名.txt";
+"File name:" = "文件名称：";
+
+/* Extensions manager */
+"Extensions" = "扩展";
+"No extensions" = "无扩展";
+"Add JSON files to\n~/.config/winfinder/actions/" = "在以下路径添加 JSON 文件：\n~/.config/winfinder/actions/";
+"Folder" = "文件夹";
+"JSON File" = "JSON 文件";
+"New Extension" = "新建扩展";
+"Edit Extension" = "编辑扩展";
+"Open Folder" = "打开文件夹";
+"Delete \"%@\"?" = "删除「%@」？";
+"Manage Extensions…" = "管理扩展…";
+
+/* Extension form */
+"Action type" = "操作类型";
+"Icon" = "图标";
+"Select at least one context." = "请至少选择一个上下文。";
+"Menu items" = "菜单项目";
+"Add item" = "添加项目";
+"Item name" = "项目名称";
+"Command {file}" = "命令 {file}";
+"Submenu name" = "子菜单名称";
+"Add child item" = "添加子项目";
+"Change icon" = "更改图标";
+"Remove icon" = "移除图标";
+"Choose icon" = "选择图标";
+"E.g. Open with TextEdit" = "例如：使用文本编辑打开";
+"pdf, txt, * (all)" = "pdf、txt、*（全部）";
+"Context" = "上下文";
+"File" = "文件";
+"Background" = "后台";
+
+/* Menu node types */
+"Command" = "命令";
+"Separator" = "分隔符";
+"Submenu" = "子菜单";
+
+/* Model errors */
+"Enter a command or at least one submenu item." = "请输入命令或至少一个子菜单项目。";

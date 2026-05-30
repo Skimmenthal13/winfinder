@@ -1,0 +1,80 @@
+/* General */
+"Cancel" = "Annulla";
+"Create" = "Crea";
+"Save" = "Salva";
+"Remove" = "Rimuovi";
+"Close" = "Chiudi";
+"Edit" = "Modifica";
+"Delete" = "Elimina";
+"Rename" = "Rinomina";
+"Path" = "Percorso";
+"Search" = "Cerca";
+"Choose…" = "Scegli…";
+"Choose Icon" = "Scegli icona";
+
+/* File list columns */
+"Name" = "Nome";
+"Date Modified" = "Data modifica";
+"Size" = "Dimensione";
+
+/* Status bar */
+"%lld items" = "%lld elementi";
+"%lld selected" = "%lld selezionati";
+
+/* Context menu */
+"Open" = "Apri";
+"Open With…" = "Apri con…";
+"AirDrop" = "AirDrop";
+"Copy" = "Copia";
+"Cut" = "Taglia";
+"Paste" = "Incolla";
+"Compress to ZIP" = "Comprimi in ZIP";
+"New Folder" = "Nuova cartella";
+"New File" = "Nuovo file";
+
+/* Alerts and prompts */
+"Move %@ to Trash?" = "Spostare %@ nel cestino?";
+"Move to Trash" = "Sposta nel cestino";
+"New name for \"%@\":" = "Nuovo nome per \"%@\":";
+"Folder name:" = "Nome della cartella:";
+"Untitled.txt" = "Senza titolo.txt";
+"File name:" = "Nome del file:";
+
+/* Extensions manager */
+"Extensions" = "Estensioni";
+"No extensions" = "Nessuna estensione";
+"Add JSON files to\n~/.config/winfinder/actions/" = "Aggiungi file JSON in\n~/.config/winfinder/actions/";
+"Folder" = "Cartella";
+"JSON File" = "File JSON";
+"New Extension" = "Nuova estensione";
+"Edit Extension" = "Modifica estensione";
+"Open Folder" = "Apri cartella";
+"Delete \"%@\"?" = "Eliminare \"%@\"?";
+"Manage Extensions…" = "Gestisci estensioni…";
+
+/* Extension form */
+"Action type" = "Tipo azione";
+"Icon" = "Icona";
+"Select at least one context." = "Seleziona almeno un context.";
+"Menu items" = "Voci menu";
+"Add item" = "Aggiungi voce";
+"Item name" = "Nome voce";
+"Command {file}" = "Comando {file}";
+"Submenu name" = "Nome sottomenu";
+"Add child item" = "Aggiungi voce figlia";
+"Change icon" = "Cambia icona";
+"Remove icon" = "Rimuovi icona";
+"Choose icon" = "Scegli icona";
+"E.g. Open with TextEdit" = "Es. Apri con TextEdit";
+"pdf, txt, * (all)" = "pdf, txt, * (tutti)";
+"Context" = "Context";
+"File" = "File";
+"Background" = "Background";
+
+/* Menu node types */
+"Command" = "Comando";
+"Separator" = "Separatore";
+"Submenu" = "Sottomenu";
+
+/* Model errors */
+"Enter a command or at least one submenu item." = "Inserisci un comando o almeno una voce sottomenu.";
