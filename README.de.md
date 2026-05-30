@@ -2,7 +2,7 @@
 
 Ein Dateimanager für macOS, der sich wie zu Hause anfühlt — für alle, die von Windows kommen.
 
-🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 Deutsch &nbsp; 🇪🇸 [Español](README.es.md) &nbsp; 🇨🇳 [中文](README.zh.md)
+🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 Deutsch &nbsp; 🇪🇸 [Español](README.es.md) &nbsp; 🇨🇳 [中文](README.zh.md) &nbsp; [🇲🇬 Malagasy ❤️](README.mg.md)
 
 ![Win Finder screenshot](docs/screenshot.png)
 
