@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Win Finder — Windows Explorer for macOS</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d0d; color: #e8e8e8; line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 0.5px solid #2a2a2a; position: sticky; top: 0; background: #0d0d0d; z-index: 100; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 500; }
+  .nav-links { display: flex; gap: 1.5rem; font-size: 14px; color: #888; }
+  .nav-links a:hover { color: #e8e8e8; }
+  .hero { text-align: center; padding: 5rem 2rem 4rem; max-width: 800px; margin: 0 auto; }
+  .hero-badge { display: inline-block; font-size: 12px; color: #888; border: 0.5px solid #333; border-radius: 20px; padding: 4px 14px; margin-bottom: 1.5rem; }
+  .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; color: #ffffff; }
+  .hero h1 span { color: #FFD60A; }
+  .hero p { font-size: 18px; color: #888; max-width: 520px; margin: 0 auto 2.5rem; }
+  .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: #FFD60A; color: #000; font-weight: 600; font-size: 15px; padding: 12px 24px; border-radius: 10px; transition: opacity 0.15s; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #e8e8e8; font-size: 15px; padding: 12px 24px; border-radius: 10px; border: 0.5px solid #333; transition: border-color 0.15s; }
+  .btn-secondary:hover { border-color: #666; }
+  .hero-note { font-size: 12px; color: #555; margin-top: 1rem; }
+  .screenshot-section { max-width: 1000px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .screenshot-wrapper { border-radius: 12px; overflow: hidden; border: 0.5px solid #2a2a2a; }
+  .screenshot-wrapper img { width: 100%; display: block; }
+  .features { max-width: 1000px; margin: 0 auto; padding: 4rem 2rem; }
+  .features h2 { font-size: 28px; font-weight: 600; text-align: center; color: #fff; margin-bottom: 3rem; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: #1a1a1a; border: 0.5px solid #1a1a1a; border-radius: 12px; overflow: hidden; }
+  .feature-item { background: #0d0d0d; padding: 1.5rem; }
+  .feature-icon { font-size: 24px; margin-bottom: 0.75rem; }
+  .feature-item h3 { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 0.5rem; }
+  .feature-item p { font-size: 13px; color: #666; line-height: 1.5; }
+  .extensions { max-width: 800px; margin: 0 auto; padding: 4rem 2rem; text-align: center; }
+  .extensions h2 { font-size: 28px; font-weight: 600; color: #fff; margin-bottom: 1rem; }
+  .extensions p { color: #888; font-size: 16px; margin-bottom: 2rem; }
+  .code-block { background: #111; border: 0.5px solid #2a2a2a; border-radius: 10px; padding: 1.5rem; text-align: left; font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.7; color: #ccc; overflow-x: auto; }
+  .code-block .key { color: #9CDCFE; }
+  .code-block .string { color: #CE9178; }
+  .code-block .punct { color: #888; }
+  .languages { text-align: center; padding: 3rem 2rem; border-top: 0.5px solid #1a1a1a; color: #555; font-size: 22px; letter-spacing: 4px; }
+  footer { border-top: 0.5px solid #1a1a1a; padding: 2rem; text-align: center; color: #444; font-size: 13px; }
+  footer a { color: #666; }
+  footer a:hover { color: #e8e8e8; }
+  .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  .vibe-badge { display: inline-block; margin-top: 1rem; font-size: 12px; color: #444; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><img src="icon.png" alt="Win Finder icon" style="width:28px;height:28px;border-radius:6px;"> Win Finder</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#extensions">Extensions</a>
+    <a href="https://github.com/Skimmenthal13/winfinder">GitHub</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">Open source · Free · macOS 13+</div>
+  <h1>Windows Explorer<br>for <span>macOS</span></h1>
+  <p>A native file manager for Mac that feels like home — for anyone who switched from Windows.</p>
+  <div class="hero-actions">
+    <a href="https://github.com/Skimmenthal13/winfinder/releases/latest" class="btn-primary">⬇ Download for Mac</a>
+    <a href="https://github.com/Skimmenthal13/winfinder" class="btn-secondary">View on GitHub →</a>
+  </div>
+  <p class="hero-note">Free and open source · MIT License · Build from source or download DMG</p>
+</section>
+
+<section class="screenshot-section">
+  <div class="screenshot-wrapper">
+    <img src="../docs/screenshot.png" alt="Win Finder screenshot" />
+  </div>
+</section>
+
+<section class="features" id="features">
+  <h2>Everything you missed from Windows</h2>
+  <div class="features-grid">
+    <div class="feature-item"><div class="feature-icon">📁</div><h3>Editable path bar</h3><p>Always visible, 80% of the toolbar. Click it, type a path, press Enter. Exactly like Windows Explorer.</p></div>
+    <div class="feature-item"><div class="feature-icon">🍞</div><h3>Breadcrumb navigation</h3><p>Each folder is a clickable token. Click &gt; to see subfolders. Click empty space to edit the path directly.</p></div>
+    <div class="feature-item"><div class="feature-icon">🔍</div><h3>Recursive search</h3><p>Searches all subfolders by default. Supports wildcards like *.pdf and doc*.</p></div>
+    <div class="feature-item"><div class="feature-icon">🎨</div><h3>Colorful file icons</h3><p>404 file type icons. PDFs are red, ZIPs purple, Swift files orange — just like Windows.</p></div>
+    <div class="feature-item"><div class="feature-icon">🖱</div><h3>Right-click menu</h3><p>New File, New Folder, Compress to ZIP, AirDrop, Rename, Delete — all where you'd expect them.</p></div>
+    <div class="feature-item"><div class="feature-icon">⌨️</div><h3>Keyboard shortcuts</h3><p>Delete moves to Trash. Shift+Delete permanently deletes. Cmd+C / Cmd+V copy and paste files.</p></div>
+    <div class="feature-item"><div class="feature-icon">🔌</div><h3>Extension system</h3><p>Add custom actions to the right-click menu via JSON files. Nested submenus, custom icons, context filtering.</p></div>
+    <div class="feature-item"><div class="feature-icon">🌍</div><h3>Multilanguage</h3><p>English, Italian, German, Spanish, Simplified Chinese, and Malagasy ❤️. Follows your system language.</p></div>
+  </div>
+</section>
+
+<section class="extensions" id="extensions">
+  <h2>Extensible by design</h2>
+  <p>Any app can add actions to Win Finder's right-click menu — no SDK, no approval process. Just a JSON file.</p>
+  <div class="code-block">
+    <span class="punct">{</span><br>
+    &nbsp;&nbsp;<span class="key">"name"</span><span class="punct">:</span> <span class="string">"Git"</span><span class="punct">,</span><br>
+    &nbsp;&nbsp;<span class="key">"context"</span><span class="punct">:</span> <span class="punct">[</span><span class="string">"folder"</span><span class="punct">,</span> <span class="string">"background"</span><span class="punct">],</span><br>
+    &nbsp;&nbsp;<span class="key">"submenu"</span><span class="punct">:</span> <span class="punct">[</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="punct">{</span> <span class="key">"name"</span><span class="punct">:</span> <span class="string">"Pull"</span><span class="punct">,</span> <span class="key">"command"</span><span class="punct">:</span> <span class="string">"cd '{file}' && git pull"</span> <span class="punct">},</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="punct">{</span> <span class="key">"name"</span><span class="punct">:</span> <span class="string">"Push"</span><span class="punct">,</span> <span class="key">"command"</span><span class="punct">:</span> <span class="string">"cd '{file}' && git push"</span> <span class="punct">}</span><br>
+    &nbsp;&nbsp;<span class="punct">]</span><br>
+    <span class="punct">}</span>
+  </div>
+</section>
+
+<div class="languages">🇬🇧 🇮🇹 🇩🇪 🇪🇸 🇨🇳 🇲🇬</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/Skimmenthal13/winfinder">GitHub</a>
+    <a href="https://github.com/Skimmenthal13/winfinder/releases">Releases</a>
+    <a href="https://github.com/Skimmenthal13/winfinder/issues">Issues</a>
+    <a href="https://github.com/Skimmenthal13/winfinder/blob/main/README.md">Docs</a>
+  </div>
+  <div>Built by <a href="https://github.com/Skimmenthal13">@Skimmenthal13</a> · MIT License</div>
+  <div class="vibe-badge">🤖 Built with vibe coding using Claude Code</div>
+</footer>
+
+</body>
+</html>
