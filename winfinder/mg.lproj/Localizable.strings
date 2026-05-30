@@ -1,0 +1,80 @@
+/* General */
+"Cancel" = "Ajanony";
+"Create" = "Mamorona";
+"Save" = "Tehirizo";
+"Remove" = "Esory";
+"Close" = "Akatony";
+"Edit" = "Ovay";
+"Delete" = "Fafao";
+"Rename" = "Ataovy anarana vaovao";
+"Path" = "Lalana";
+"Search" = "Fikarohana";
+"Choose…" = "Safidio…";
+"Choose Icon" = "Safidio ny ikona";
+
+/* File list columns */
+"Name" = "Anarana";
+"Date Modified" = "Daty nanovana";
+"Size" = "Haben'ny";
+
+/* Status bar */
+"%lld items" = "%lld zavatra";
+"%lld selected" = "%lld voafidy";
+
+/* Context menu */
+"Open" = "Misokatra";
+"Open With…" = "Misokatra amin'ny…";
+"AirDrop" = "AirDrop";
+"Copy" = "Adika";
+"Cut" = "Tapaka";
+"Paste" = "Vatsio";
+"Compress to ZIP" = "Fonony ho ZIP";
+"New Folder" = "Folder vaovao";
+"New File" = "Rakitra vaovao";
+
+/* Alerts and prompts */
+"Move %@ to Trash?" = "Hafindra any amin'ny Basket ny %@?";
+"Move to Trash" = "Hafindra any amin'ny Basket";
+"New name for \"%@\":" = "Anarana vaovao ho an'ny \"%@\":";
+"Folder name:" = "Anaran'ny folder:";
+"Untitled.txt" = "Tsy manan'anarana.txt";
+"File name:" = "Anaran'ny rakitra:";
+
+/* Extensions manager */
+"Extensions" = "Fanitarana";
+"No extensions" = "Tsy misy fanitarana";
+"Add JSON files to\n~/.config/winfinder/actions/" = "Ampio ny rakitra JSON ao\n~/.config/winfinder/actions/";
+"Folder" = "Folder";
+"JSON File" = "Rakitra JSON";
+"New Extension" = "Fanitarana vaovao";
+"Edit Extension" = "Ovay ny fanitarana";
+"Open Folder" = "Sokafy ny folder";
+"Delete \"%@\"?" = "Fafao ny \"%@\"?";
+"Manage Extensions…" = "Tantano ny fanitarana…";
+
+/* Extension form */
+"Action type" = "Karazana hetsika";
+"Icon" = "Ikona";
+"Select at least one context." = "Safidio farafahakeliny tontolon'andro iray.";
+"Menu items" = "Zavatra ao amin'ny menio";
+"Add item" = "Ampio zavatra";
+"Item name" = "Anarana zavatra";
+"Command {file}" = "Baiko {file}";
+"Submenu name" = "Anaran'ny submenio";
+"Add child item" = "Ampio zavatra zanaka";
+"Change icon" = "Ovay ny ikona";
+"Remove icon" = "Esory ny ikona";
+"Choose icon" = "Safidio ny ikona";
+"E.g. Open with TextEdit" = "Ohatra: Sokafy amin'ny TextEdit";
+"pdf, txt, * (all)" = "pdf, txt, * (rehetra)";
+"Context" = "Tontolon'andro";
+"File" = "Rakitra";
+"Background" = "Vohindro";
+
+/* Menu node types */
+"Command" = "Baiko";
+"Separator" = "Misaraka";
+"Submenu" = "Submenio";
+
+/* Model errors */
+"Enter a command or at least one submenu item." = "Ampidiro ny baiko na farafahakeliny zavatra submenio iray.";
