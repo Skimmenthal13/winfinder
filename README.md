@@ -28,6 +28,7 @@ Win Finder fixes that. It's a native macOS file manager built around the workflo
 - **AirDrop** from right-click — share any file directly without opening Finder.
 - **Real-time file system monitoring** — the list updates automatically when files change on disk.
 - **Extension system** — add custom actions to the right-click menu via JSON files. Supports nested submenus, separators, custom icons, and context filtering. Manage everything from **Win Finder → Manage Extensions**.
+- **Multilanguage** — available in English 🇬🇧, Italian 🇮🇹, German 🇩🇪, Spanish 🇪🇸, and Simplified Chinese 🇨🇳. The interface language follows the system language automatically.
 
 ## Extension system
 
@@ -93,7 +94,6 @@ Then press `Cmd+R` in Xcode to build and run.
 - [ ] Column resizing
 - [ ] Icon view and thumbnail preview
 - [ ] Keyboard shortcut customization
-- [x] Multilanguage support — English, Italian, German, Spanish, Simplified Chinese
 - [ ] Community extension library — a separate repo with ready-made JSON actions for popular apps (VS Code, iTerm2, Git, FFmpeg...)
 - [ ] **"Open with Win Finder"** in Finder's right-click menu — Finder Sync Extension that adds "Open with Win Finder" to the Finder context menu and registers Win Finder as a handler for `public.folder`
 - [ ] **WinFinderPicker** — allow third-party developers to use Win Finder as an alternative file picker in their own apps. Two approaches under evaluation: a **Swift Package (SPM)** that developers import directly, or an **XPC Service** that Win Finder exposes as a system service invoked via IPC. The best approach will be chosen based on architecture and developer experience.

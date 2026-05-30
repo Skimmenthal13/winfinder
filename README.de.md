@@ -28,6 +28,7 @@ Win Finder löst das. Es ist ein nativer macOS-Dateimanager, der auf den Arbeits
 - **AirDrop** per Rechtsklick — Dateien direkt teilen ohne den Finder zu öffnen.
 - **Echtzeit-Dateisystemüberwachung** — die Liste aktualisiert sich automatisch, wenn sich Dateien auf dem Datenträger ändern.
 - **Erweiterungssystem** — benutzerdefinierte Aktionen zum Kontextmenü über JSON-Dateien hinzufügen. Unterstützt verschachtelte Untermenüs, Trennlinien, benutzerdefinierte Icons und Kontextfilterung. Alles verwalten über **Win Finder → Erweiterungen verwalten**.
+- **Mehrsprachig** — verfügbar auf Englisch 🇬🇧, Italienisch 🇮🇹, Deutsch 🇩🇪, Spanisch 🇪🇸 und Vereinfachtem Chinesisch 🇨🇳. Die Sprache der Benutzeroberfläche folgt automatisch der Systemsprache.
 
 ## Erweiterungssystem
 

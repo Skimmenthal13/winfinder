@@ -28,6 +28,7 @@ Win Finder risolve tutto questo. È un file manager nativo per macOS costruito a
 - **AirDrop** dal tasto destro — condividi qualsiasi file direttamente senza aprire il Finder.
 - **Monitoraggio filesystem in tempo reale** — la lista si aggiorna automaticamente quando i file cambiano su disco.
 - **Sistema di estensioni** — aggiungi azioni personalizzate al menu contestuale tramite file JSON. Supporta sottomenu annidati, separatori, icone personalizzate e filtri per contesto. Gestisci tutto da **Win Finder → Gestisci estensioni**.
+- **Multilingua** — disponibile in inglese 🇬🇧, italiano 🇮🇹, tedesco 🇩🇪, spagnolo 🇪🇸 e cinese semplificato 🇨🇳. La lingua dell'interfaccia segue automaticamente la lingua del sistema.
 
 ## Sistema di estensioni
 
