@@ -23,7 +23,9 @@ struct ContentView: View {
 
 struct FileListView: View {
     @Bindable var model: FileExplorerModel
-    @State private var pathInput = FileManager.default.homeDirectoryForCurrentUser.path
+    @State private var isEditingPath = false
+    @State private var pathEditText = ""
+    @FocusState private var pathEditFocused: Bool
     @State private var sortKey = "name"
     @State private var sortAscending = true
     @State private var isDropTargeted = false
@@ -92,15 +94,27 @@ struct FileListView: View {
                 .buttonStyle(.borderless)
                 .frame(width: 24)
 
-                TextField("Path", text: $pathInput)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(width: max(0, fieldsWidth * 0.8 - 4))
-                    .onSubmit {
-                        model.navigate(to: pathInput)
-                        pathInput = model.currentPath
-                    }
-                    .onChange(of: model.currentPath) { _, new in pathInput = new }
+                if isEditingPath {
+                    TextField("Path", text: $pathEditText)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+                        .focused($pathEditFocused)
+                        .onSubmit {
+                            model.navigate(to: pathEditText)
+                            isEditingPath = false
+                        }
+                        .onKeyPress(.escape) {
+                            isEditingPath = false
+                            return .handled
+                        }
+                        .onChange(of: pathEditFocused) { _, focused in
+                            if !focused { isEditingPath = false }
+                        }
+                        .frame(width: max(0, fieldsWidth * 0.8 - 4))
+                } else {
+                    breadcrumbView
+                        .frame(width: max(0, fieldsWidth * 0.8 - 4))
+                }
 
                 TextField(
                     "",
@@ -115,6 +129,88 @@ struct FileListView: View {
         }
         .frame(height: 38)
         .background(Color(NSColor.windowBackgroundColor))
+    }
+
+    private var breadcrumbView: some View {
+        let components = pathComponents()
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 2) {
+                ForEach(Array(components.enumerated()), id: \.offset) { idx, component in
+                    Button(component.name) {
+                        model.navigate(to: component.path)
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(.body))
+                    .foregroundStyle(
+                        idx == components.count - 1 ? Color.primary : Color.secondary
+                    )
+                    .padding(.horizontal, 6)
+                    .frame(height: 22)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(idx == components.count - 1
+                                  ? Color.accentColor.opacity(0.12)
+                                  : Color(NSColor.labelColor).opacity(0.07))
+                    )
+
+                    ChevronMenuView(
+                        subdirectories: subdirectories(at: component.path),
+                        onNavigate: { sub in
+                            model.navigate(
+                                to: URL(fileURLWithPath: component.path)
+                                    .appendingPathComponent(sub).path
+                            )
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color(NSColor.controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 5)
+                .strokeBorder(Color(NSColor.separatorColor), lineWidth: 0.5)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 5))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            pathEditText = model.currentPath
+            isEditingPath = true
+            pathEditFocused = true
+        }
+    }
+
+    private func pathComponents() -> [(name: String, path: String)] {
+        var parts: [(name: String, path: String)] = []
+        var current = URL(fileURLWithPath: model.currentPath).standardized
+        while true {
+            let parent = current.deletingLastPathComponent()
+            if parent.path == current.path {
+                parts.append((name: "/", path: current.path))
+                break
+            }
+            parts.append((name: current.lastPathComponent, path: current.path))
+            current = parent
+        }
+        return parts.reversed()
+    }
+
+    private func subdirectories(at path: String) -> [String] {
+        let url = URL(fileURLWithPath: path)
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: url,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else { return [] }
+        return contents.compactMap { u -> String? in
+            guard (try? u.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+            else { return nil }
+            return u.lastPathComponent
+        }.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     // MARK: - Column header
@@ -495,9 +591,17 @@ struct FileListView: View {
             alert.addButton(withTitle: "Annulla")
             let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
             tf.stringValue = defaultValue
-            tf.selectText(nil)
             alert.accessoryView = tf
             alert.window.initialFirstResponder = tf
+            var observer: NSObjectProtocol?
+            observer = NotificationCenter.default.addObserver(
+                forName: NSWindow.didBecomeKeyNotification,
+                object: alert.window,
+                queue: .main
+            ) { _ in
+                tf.selectText(nil)
+                if let obs = observer { NotificationCenter.default.removeObserver(obs) }
+            }
             if alert.runModal() == .alertFirstButtonReturn {
                 let value = tf.stringValue.trimmingCharacters(in: .whitespaces)
                 if !value.isEmpty { action(value) }
@@ -526,6 +630,98 @@ struct FileListView: View {
 
     private func appDisplayName(_ url: URL) -> String {
         url.deletingPathExtension().lastPathComponent
+    }
+}
+
+// MARK: - ChevronMenuView
+
+struct ChevronMenuView: View {
+    let subdirectories: [String]
+    let onNavigate: (String) -> Void
+
+    @State private var isMenuOpen = false
+
+    var body: some View {
+        ZStack {
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(
+                    subdirectories.isEmpty ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary)
+                )
+                .rotationEffect(.degrees(isMenuOpen ? 90 : 0))
+                .animation(.easeInOut(duration: 0.15), value: isMenuOpen)
+                .allowsHitTesting(false)
+
+            if !subdirectories.isEmpty {
+                NSMenuButton(
+                    subdirectories: subdirectories,
+                    onOpen:   { isMenuOpen = true  },
+                    onClose:  { isMenuOpen = false },
+                    onSelect: onNavigate
+                )
+                .opacity(0.001)
+            }
+        }
+        .frame(width: 14, height: 22)
+    }
+}
+
+// MARK: - NSMenuButton
+
+struct NSMenuButton: NSViewRepresentable {
+    let subdirectories: [String]
+    let onOpen:   () -> Void
+    let onClose:  () -> Void
+    let onSelect: (String) -> Void
+
+    func makeNSView(context: Context) -> NSButton {
+        let btn = NSButton()
+        btn.bezelStyle = .inline
+        btn.isBordered = false
+        btn.title = ""
+        btn.target = context.coordinator
+        btn.action = #selector(Coordinator.showMenu(_:))
+        return btn
+    }
+
+    func updateNSView(_ nsView: NSButton, context: Context) {
+        context.coordinator.parent = self
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    final class Coordinator: NSObject, NSMenuDelegate {
+        var parent: NSMenuButton
+
+        init(parent: NSMenuButton) { self.parent = parent }
+
+        @objc func showMenu(_ sender: NSButton) {
+            let menu = NSMenu()
+            menu.delegate = self
+            for sub in parent.subdirectories {
+                let item = NSMenuItem(
+                    title: sub,
+                    action: #selector(pick(_:)),
+                    keyEquivalent: ""
+                )
+                item.target = self
+                menu.addItem(item)
+            }
+            parent.onOpen()
+            menu.popUp(
+                positioning: nil,
+                at: NSPoint(x: 0, y: sender.bounds.height),
+                in: sender
+            )
+        }
+
+        @objc func pick(_ item: NSMenuItem) {
+            parent.onSelect(item.title)
+        }
+
+        func menuDidClose(_ menu: NSMenu) {
+            DispatchQueue.main.async { self.parent.onClose() }
+        }
     }
 }
 
