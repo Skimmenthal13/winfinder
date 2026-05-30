@@ -2,7 +2,7 @@
 
 Un gestor de archivos para macOS que se siente como en casa — para quienes vienen de Windows.
 
-🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 [Deutsch](README.de.md) &nbsp; 🇪🇸 Español &nbsp; 🇨🇳 [中文](README.zh.md)
+🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 [Deutsch](README.de.md) &nbsp; 🇪🇸 Español &nbsp; 🇨🇳 [中文](README.zh.md) &nbsp; [🇲🇬 Malagasy ❤️](README.mg.md)
 
 ![Win Finder screenshot](docs/screenshot.png)
 

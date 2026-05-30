@@ -2,7 +2,7 @@
 
 一款让你有家的感觉的 macOS 文件管理器 — 专为从 Windows 转来的用户打造。
 
-🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 [Deutsch](README.de.md) &nbsp; 🇪🇸 [Español](README.es.md) &nbsp; 🇨🇳 中文
+🇬🇧 [English](README.md) &nbsp; 🇮🇹 [Italiano](README.it.md) &nbsp; 🇩🇪 [Deutsch](README.de.md) &nbsp; 🇪🇸 [Español](README.es.md) &nbsp; 🇨🇳 中文 &nbsp; [🇲🇬 Malagasy ❤️](README.mg.md)
 
 ![Win Finder screenshot](docs/screenshot.png)
 
