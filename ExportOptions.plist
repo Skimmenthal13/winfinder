@@ -8,6 +8,8 @@
     <string>9NXQ73MXFR</string>
     <key>signingStyle</key>
     <string>automatic</string>
+    <key>signingCertificate</key>
+    <string>Developer ID Application</string>
     <key>hardened-runtime</key>
     <true/>
 </dict>
