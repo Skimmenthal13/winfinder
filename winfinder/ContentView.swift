@@ -15,6 +15,9 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 140, ideal: 180, max: 320)
         } detail: {
             FileListView(model: model)
+                .navigationSubtitle(
+                    Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+                )
         }
         .frame(minWidth: 800, minHeight: 450)
         .sheet(isPresented: $showExtensionsManager) {
