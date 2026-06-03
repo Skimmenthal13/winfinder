@@ -1,11 +1,5 @@
-//
-//  winfinderApp.swift
-//  winfinder
-//
-//  Created by Vincenzo Schimmenti on 29/05/26.
-//
-
 import SwiftUI
+import Sparkle
 
 extension Notification.Name {
     static let openExtensionsManager = Notification.Name("winfinder.openExtensionsManager")
@@ -13,6 +7,16 @@ extension Notification.Name {
 
 @main
 struct winfinderApp: App {
+    private let updaterController: SPUStandardUpdaterController
+
+    init() {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -20,6 +24,11 @@ struct winfinderApp: App {
         .defaultSize(width: 900, height: 600)
         .windowResizability(.contentMinSize)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") {
+                    updaterController.checkForUpdates(nil)
+                }
+            }
             CommandGroup(after: .appSettings) {
                 Divider()
                 Button {

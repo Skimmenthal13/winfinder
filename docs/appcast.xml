@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>Win Finder</title>
+        <link>https://skimmenthal13.github.io/winfinder/</link>
+        <description>Win Finder release feed</description>
+        <language>en</language>
+
+        <item>
+            <title>Win Finder 0.1.0 beta</title>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.1.0-beta</sparkle:shortVersionString>
+            <pubDate>Tue, 03 Jun 2026 00:00:00 +0000</pubDate>
+            <sparkle:releaseNotesLink>https://github.com/Skimmenthal13/winfinder/releases/tag/v0.1.0-beta</sparkle:releaseNotesLink>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Skimmenthal13/winfinder/releases/download/v0.1.0-beta/WinFinder-v0.1.0-beta.dmg"
+                sparkle:version="1"
+                sparkle:shortVersionString="0.1.0-beta"
+                length="6632821"
+                type="application/octet-stream"
+                sparkle:edSignature="dmVXt9w6fc7EYw+TY7wdHI4FrfheJajI4Aog3i8vKkvvkZXe9iNpXKu34KQpgmOMZNbCVb09q/ZlR4LwzToiAw=="
+            />
+        </item>
+
+    </channel>
+</rss>
