@@ -120,3 +120,7 @@ MIT — do whatever you want with it.
 Built by [@Skimmenthal13](https://github.com/Skimmenthal13) — a Windows refugee who got tired of fighting the Finder.
 
 > 🤖 This entire project was built with **vibe coding** using [Claude Code](https://claude.ai/code) — from the first line of Swift to the extension system, breadcrumb navigation, and file icons. No shame, only pride.
+
+## Legal
+- [Privacy Policy](https://skimmenthal13.github.io/winfinder/privacy-policy.html)
+- [Terms of Service](https://skimmenthal13.github.io/winfinder/terms-of-service.html)
