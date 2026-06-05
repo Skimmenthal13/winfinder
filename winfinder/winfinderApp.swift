@@ -18,13 +18,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        guard UserDefaults.standard.bool(forKey: "winfinder.useAsDefaultFolderHandler"),
-              let bundleID = Bundle.main.bundleIdentifier else { return }
-        LSSetDefaultRoleHandlerForContentType(
-            "public.folder" as CFString,
-            .viewer,
-            bundleID as CFString
-        )
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
+
+        if UserDefaults.standard.bool(forKey: "winfinder.useAsDefaultFolderHandler"),
+           let bundleID = Bundle.main.bundleIdentifier {
+            LSSetDefaultRoleHandlerForContentType(
+                "public.folder" as CFString,
+                .viewer,
+                bundleID as CFString
+            )
+        }
+    }
+
+    // MARK: - Services
+
+    @objc func openFolder(_ pboard: NSPasteboard,
+                          userData: String,
+                          error: AutoreleasingUnsafeMutablePointer<NSString?>) {
+        guard let urls = pboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) as? [URL],
+              let url = urls.first(where: {
+                  (try? $0.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+              })
+        else { return }
+        navigate(to: url.path)
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
