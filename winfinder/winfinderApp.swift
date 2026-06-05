@@ -79,6 +79,19 @@ struct winfinderApp: App {
                 Button("Settings…") {
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                     DispatchQueue.main.async {
+                        print("[Settings DEBUG] window count: \(NSApp.windows.count)")
+                        for (i, w) in NSApp.windows.enumerated() {
+                            print("""
+                                [Settings DEBUG] [\(i)] \
+                                class=\(type(of: w)) \
+                                title="\(w.title)" \
+                                isKey=\(w.isKeyWindow) \
+                                isMain=\(w.isMainWindow) \
+                                canBecomeKey=\(w.canBecomeKey) \
+                                isVisible=\(w.isVisible) \
+                                isPanel=\(w is NSPanel)
+                                """)
+                        }
                         NSApp.activate(ignoringOtherApps: true)
                         NSApp.windows
                             .first { !($0 is NSPanel) && $0 !== NSApp.mainWindow && $0.canBecomeKey }?
