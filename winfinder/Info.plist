@@ -12,6 +12,8 @@
     <string>https://skimmenthal13.github.io/winfinder/appcast.xml</string>
     <key>SUEnableAutomaticChecks</key>
     <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>3600</integer>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

@@ -10,6 +10,13 @@ extension Notification.Name {
 // MARK: - AppDelegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    // Owned here (reference type, app-lifetime) so the Sparkle scheduler is never torn down.
+    let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard UserDefaults.standard.bool(forKey: "winfinder.useAsDefaultFolderHandler"),
               let bundleID = Bundle.main.bundleIdentifier else { return }
@@ -53,15 +60,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct winfinderApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    private let updaterController: SPUStandardUpdaterController
-
-    init() {
-        updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
-        )
-    }
 
     var body: some Scene {
         WindowGroup {
@@ -72,7 +70,7 @@ struct winfinderApp: App {
         .commands {
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates…") {
-                    updaterController.checkForUpdates(nil)
+                    appDelegate.updaterController.checkForUpdates(nil)
                 }
             }
             CommandGroup(replacing: .appSettings) {
