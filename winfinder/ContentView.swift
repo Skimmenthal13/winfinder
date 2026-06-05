@@ -30,6 +30,10 @@ struct ContentView: View {
             guard let path = note.object as? String else { return }
             model.navigate(to: path)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .selectFile)) { note in
+            guard let path = note.object as? String else { return }
+            model.pendingSelectURL = URL(fileURLWithPath: path)
+        }
     }
 }
 
@@ -395,6 +399,13 @@ struct FileListView: View {
                 proxy.scrollTo(url, anchor: nil)
             }
             scrollToURL = nil
+        }
+        .onChange(of: model.pendingSelectURL) { _, url in
+            guard let url else { return }
+            model.selection = [url]
+            anchorURL = url
+            scrollToURL = url
+            model.pendingSelectURL = nil
         }
         } // ScrollViewReader
     }

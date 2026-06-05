@@ -167,6 +167,7 @@ final class FileExplorerModel {
     var searchResults: [FileItem] = []
     var isSearching = false
     var selection: Set<URL> = []
+    var pendingSelectURL: URL? = nil
     var recentPaths: [String] = []
     var mountedVolumes: [URL] = []
     var customActions: [WFAction] = []

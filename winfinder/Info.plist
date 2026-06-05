@@ -58,10 +58,16 @@
             <string>openFolder</string>
             <key>NSPortName</key>
             <string>Win Finder</string>
-            <key>NSSendFileTypes</key>
+            <key>NSSendTypes</key>
             <array>
-                <string>public.directory</string>
+                <string>NSURLPboardType</string>
+                <string>NSStringPboardType</string>
             </array>
+            <key>NSRequiredContext</key>
+            <dict>
+                <key>NSTextContent</key>
+                <string>FilePath</string>
+            </dict>
         </dict>
     </array>
     <key>UTExportedTypeDeclarations</key>

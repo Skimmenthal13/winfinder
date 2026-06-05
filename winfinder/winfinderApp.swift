@@ -5,6 +5,7 @@ import CoreServices
 extension Notification.Name {
     static let openExtensionsManager = Notification.Name("winfinder.openExtensionsManager")
     static let navigateToPath = Notification.Name("winfinder.navigateToPath")
+    static let selectFile = Notification.Name("winfinder.selectFile")
 }
 
 // MARK: - AppDelegate
@@ -40,11 +41,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             forClasses: [NSURL.self],
             options: [.urlReadingFileURLsOnly: true]
         ) as? [URL],
-              let url = urls.first(where: {
-                  (try? $0.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
-              })
+              let url = urls.first
         else { return }
-        navigate(to: url.path)
+        let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+        navigate(to: isDirectory ? url.path : url.deletingLastPathComponent().path)
+        if !isDirectory {
+            NotificationCenter.default.post(name: .selectFile, object: url.path)
+        }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
