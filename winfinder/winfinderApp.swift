@@ -78,6 +78,12 @@ struct winfinderApp: App {
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") {
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    DispatchQueue.main.async {
+                        NSApp.activate(ignoringOtherApps: true)
+                        NSApp.windows
+                            .first { !($0 is NSPanel) && $0 !== NSApp.mainWindow && $0.canBecomeKey }?
+                            .makeKeyAndOrderFront(nil)
+                    }
                 }
                 .keyboardShortcut(",", modifiers: .command)
                 Divider()
