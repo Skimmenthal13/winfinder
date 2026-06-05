@@ -80,4 +80,6 @@ MIT — ataovy izay tianao.
 
 Naorin'i [@Skimmenthal13](https://github.com/Skimmenthal13) — mpitsoa-ponenana avy amin'ny Windows izay tsy nanana antoka intsony tamin'ny Finder.
 
-> 🤖 Ity tetikasa manontolo ity dia naorina tamin'ny **vibe coding** mampiasa [Claude Code](https://claude.ai/code) — hatramin'ny andalana Swift voalohany ka hatramin'ny rafitra fanitarana, ny fikarakarana breadcrumb ary ny ikona rakitra. Tsy menatra, faly fotsiny.
+## Ara-dalàna
+- [Fanamarinana ny Fiainana Manokana](https://skimmenthal13.github.io/winfinder/privacy-policy.html)
+- [Fepetra momba ny Fampiasana](https://skimmenthal13.github.io/winfinder/terms-of-service.html)

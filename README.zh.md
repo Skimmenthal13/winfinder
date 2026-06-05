@@ -80,8 +80,6 @@ MIT — 随便用。
 
 由 [@Skimmenthal13](https://github.com/Skimmenthal13) 构建 — 一个厌倦了与 Finder 抗争的 Windows 难民。
 
-> 🤖 整个项目使用 [Claude Code](https://claude.ai/code) 进行 **vibe coding** 构建 — 从第一行 Swift 代码到扩展系统、面包屑导航和文件图标。无需羞耻，只有骄傲。
-
 ## 法律信息
 - [隐私政策](https://skimmenthal13.github.io/winfinder/privacy-policy.html)
 - [服务条款](https://skimmenthal13.github.io/winfinder/terms-of-service.html)

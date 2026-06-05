@@ -119,8 +119,6 @@ MIT — fai quello che vuoi.
 
 Creato da [@Skimmenthal13](https://github.com/Skimmenthal13) — un rifugiato da Windows che ne aveva abbastanza del Finder.
 
-> 🤖 Questo intero progetto è stato costruito con **vibe coding** usando [Claude Code](https://claude.ai/code) — dalla prima riga di Swift al sistema di estensioni, la navigazione breadcrumb e le icone dei file. Nessuna vergogna, solo orgoglio.
-
 ## Legale
 - [Informativa sulla Privacy](https://skimmenthal13.github.io/winfinder/privacy-policy.html)
 - [Termini di Servizio](https://skimmenthal13.github.io/winfinder/terms-of-service.html)
