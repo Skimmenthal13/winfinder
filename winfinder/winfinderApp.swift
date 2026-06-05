@@ -1,12 +1,58 @@
 import SwiftUI
 import Sparkle
+import CoreServices
 
 extension Notification.Name {
     static let openExtensionsManager = Notification.Name("winfinder.openExtensionsManager")
+    static let navigateToPath = Notification.Name("winfinder.navigateToPath")
 }
+
+// MARK: - AppDelegate
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard UserDefaults.standard.bool(forKey: "winfinder.useAsDefaultFolderHandler"),
+              let bundleID = Bundle.main.bundleIdentifier else { return }
+        LSSetDefaultRoleHandlerForContentType(
+            "public.folder" as CFString,
+            .viewer,
+            bundleID as CFString
+        )
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            if url.scheme == "winfinder" {
+                handleSchemeURL(url)
+            } else if (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true {
+                navigate(to: url.path)
+                break
+            }
+        }
+    }
+
+    // MARK: - URL scheme
+
+    private func handleSchemeURL(_ url: URL) {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let host = components.host,
+              host == "reveal" || host == "open",
+              let path = components.queryItems?.first(where: { $0.name == "path" })?.value,
+              !path.isEmpty
+        else { return }
+        navigate(to: path)
+    }
+
+    private func navigate(to path: String) {
+        NotificationCenter.default.post(name: .navigateToPath, object: path)
+    }
+}
+
+// MARK: - App
 
 @main
 struct winfinderApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     private let updaterController: SPUStandardUpdaterController
 
     init() {
@@ -29,7 +75,11 @@ struct winfinderApp: App {
                     updaterController.checkForUpdates(nil)
                 }
             }
-            CommandGroup(after: .appSettings) {
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                }
+                .keyboardShortcut(",", modifiers: .command)
                 Divider()
                 Button {
                     NotificationCenter.default.post(name: .openExtensionsManager, object: nil)
@@ -38,6 +88,10 @@ struct winfinderApp: App {
                 }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
+        }
+
+        Settings {
+            SettingsView()
         }
     }
 }

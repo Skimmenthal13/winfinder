@@ -26,6 +26,10 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openExtensionsManager)) { _ in
             showExtensionsManager = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToPath)) { note in
+            guard let path = note.object as? String else { return }
+            model.navigate(to: path)
+        }
     }
 }
 
