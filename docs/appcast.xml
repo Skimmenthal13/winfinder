@@ -7,6 +7,23 @@
         <language>en</language>
 
         <item>
+            <title>Win Finder 0.1.7</title>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>0.1.7</sparkle:shortVersionString>
+            <pubDate>Fri, 05 Jun 2026 00:00:00 +0000</pubDate>
+            <sparkle:releaseNotesLink>https://github.com/Skimmenthal13/winfinder/releases/tag/v0.1.7</sparkle:releaseNotesLink>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Skimmenthal13/winfinder/releases/download/v0.1.7/WinFinder-v0.1.7.dmg"
+                sparkle:version="8"
+                sparkle:shortVersionString="0.1.7"
+                length="4280634"
+                type="application/octet-stream"
+                sparkle:edSignature="041W5uzrrz2lfiDfySkKEjmP3Xx2FsVrtOStomrAt77V9SUfTlq/TYTKO7hHS++L11nbSxOvKjTR9Vpxw0iYAQ=="
+            />
+        </item>
+
+        <item>
             <title>Win Finder 0.1.6</title>
             <sparkle:version>7</sparkle:version>
             <sparkle:shortVersionString>0.1.6</sparkle:shortVersionString>
