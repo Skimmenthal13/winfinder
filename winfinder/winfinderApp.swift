@@ -6,6 +6,7 @@ extension Notification.Name {
     static let openExtensionsManager = Notification.Name("winfinder.openExtensionsManager")
     static let navigateToPath = Notification.Name("winfinder.navigateToPath")
     static let selectFile = Notification.Name("winfinder.selectFile")
+    static let viewReady = Notification.Name("winfinder.viewReady")
 }
 
 // MARK: - AppDelegate
@@ -44,10 +45,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
               let url = urls.first
         else { return }
         let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
-        navigate(to: isDirectory ? url.path : url.deletingLastPathComponent().path)
-        if !isDirectory {
-            NotificationCenter.default.post(name: .selectFile, object: url.path)
+        let targetDir = isDirectory ? url : url.deletingLastPathComponent()
+        guard let encodedPath = targetDir.path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              var schemeURL = URL(string: "winfinder://reveal?path=\(encodedPath)")
+        else { return }
+        if !isDirectory,
+           var components = URLComponents(url: schemeURL, resolvingAgainstBaseURL: false) {
+            components.queryItems?.append(URLQueryItem(name: "select", value: url.path))
+            schemeURL = components.url ?? schemeURL
         }
+        NSWorkspace.shared.open(schemeURL)
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
@@ -71,6 +78,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
               !path.isEmpty
         else { return }
         navigate(to: path)
+        if let selectPath = components.queryItems?.first(where: { $0.name == "select" })?.value,
+           !selectPath.isEmpty {
+            NotificationCenter.default.post(name: .selectFile, object: selectPath)
+        }
     }
 
     private func navigate(to path: String) {
@@ -94,6 +105,12 @@ struct winfinderApp: App {
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates…") {
                     appDelegate.updaterController.checkForUpdates(nil)
+                }
+            }
+            CommandGroup(after: .help) {
+                Divider()
+                Button("things were better when times were harder") {
+                    MinesweeperWindowController.openOrFocus()
                 }
             }
             CommandGroup(replacing: .appSettings) {

@@ -425,7 +425,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.8;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skimmenthal.winfinder;
 				PRODUCT_NAME = "Win Finder";
 				REGISTER_APP_GROUPS = YES;
@@ -460,7 +460,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.8;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skimmenthal.winfinder;
 				PRODUCT_NAME = "Win Finder";
 				REGISTER_APP_GROUPS = YES;
