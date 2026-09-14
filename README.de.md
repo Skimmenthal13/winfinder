@@ -46,7 +46,7 @@ Jede App kann sich mit Win Finder integrieren, indem ein Ordner in `~/.config/wi
 ## Installation
 
 ### Voraussetzungen
-- macOS 13 Ventura oder neuer
+- macOS 14 Sonoma oder neuer
 - Apple Silicon oder Intel Mac
 
 ### Aus dem Quellcode erstellen

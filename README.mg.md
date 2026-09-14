@@ -46,7 +46,7 @@ Ny app rehetra dia afaka mifandray amin'ny Win Finder amin'ny alalan'ny famorona
 ## Fametrahana
 
 ### Fepetra takiana
-- macOS 13 Ventura na any ambony kokoa
+- macOS 14 Sonoma na any ambony kokoa
 - Mac Apple Silicon na Intel
 
 ### Amboary avy amin'ny loharano

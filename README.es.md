@@ -46,7 +46,7 @@ Cualquier app puede integrarse con Win Finder creando una carpeta en `~/.config/
 ## Instalación
 
 ### Requisitos
-- macOS 13 Ventura o posterior
+- macOS 14 Sonoma o posterior
 - Mac Apple Silicon o Intel
 
 ### Compilar desde el código fuente

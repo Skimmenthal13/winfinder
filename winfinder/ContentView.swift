@@ -24,15 +24,26 @@ struct ContentView: View {
             ExtensionsManagerView(model: model)
         }
         .onReceive(NotificationCenter.default.publisher(for: .openExtensionsManager)) { _ in
+            guard model.isActiveWindow else { return }
             showExtensionsManager = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToPath)) { note in
+            guard model.isActiveWindow else { return }
             guard let path = note.object as? String else { return }
             model.navigate(to: path)
         }
         .onReceive(NotificationCenter.default.publisher(for: .selectFile)) { note in
+            guard model.isActiveWindow else { return }
             guard let path = note.object as? String else { return }
             model.pendingSelectURL = URL(fileURLWithPath: path)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateBack)) { _ in
+            guard model.isActiveWindow else { return }
+            model.navigateBack()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateForward)) { _ in
+            guard model.isActiveWindow else { return }
+            model.navigateForward()
         }
     }
 }
@@ -92,14 +103,52 @@ struct FileListView: View {
                 : nil
         )
         .background(KeyDeleteMonitor(model: model))
+        .alert(String(localized: "Operation failed"), isPresented: Binding(
+            get: { model.operationError != nil },
+            set: { if !$0 { model.operationError = nil } }
+        )) {
+            Button("OK") { model.operationError = nil }
+        } message: {
+            Text(model.operationError ?? "")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .renameSelected)) { _ in
+            guard model.isActiveWindow else { return }
+            guard model.selection.count == 1,
+                  let url = model.selection.first,
+                  let item = model.displayed.first(where: { $0.url == url })
+            else { return }
+            promptRename(item)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .newFolder)) { _ in
+            guard model.isActiveWindow else { return }
+            promptNewItem(folder: true)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .newFile)) { _ in
+            guard model.isActiveWindow else { return }
+            promptNewItem(folder: false)
+        }
     }
 
     // MARK: - Path bar
 
     private var pathBar: some View {
         GeometryReader { geo in
-            let fieldsWidth = geo.size.width - 84
+            let fieldsWidth = geo.size.width - 132  // 84 + 48 for back/forward buttons
             HStack(spacing: 8) {
+                Button(action: model.navigateBack) {
+                    Image(systemName: "chevron.left")
+                }
+                .buttonStyle(.borderless)
+                .frame(width: 24)
+                .disabled(!model.canGoBack)
+
+                Button(action: model.navigateForward) {
+                    Image(systemName: "chevron.right")
+                }
+                .buttonStyle(.borderless)
+                .frame(width: 24)
+                .disabled(!model.canGoForward)
+
                 Button(action: model.navigateUp) {
                     Image(systemName: "arrow.up")
                 }
@@ -373,10 +422,10 @@ struct FileListView: View {
             model.paste()
         }
         .contextMenu {
-            Button { promptNewFolder() } label: {
+            Button { promptNewItem(folder: true) } label: {
                 Label("New Folder", systemImage: "folder.badge.plus")
             }
-            Button { promptNewFile() } label: {
+            Button { promptNewItem(folder: false) } label: {
                 Label("New File", systemImage: "doc.badge.plus")
             }
             if model.canPaste() {
@@ -506,12 +555,17 @@ struct FileListView: View {
     // MARK: - Custom action execution
 
     private func executeAction(_ command: String, file: String) {
-        let escaped = "'" + file.replacingOccurrences(of: "'", with: "'\\''") + "'"
-        let cmd = command.replacingOccurrences(of: "{file}", with: escaped)
+        // Accept both the documented quoted placeholder and the bare form.
+        // The path is an argument, never interpolated into shell source.
+        let cmd = command
+            .replacingOccurrences(of: "'{file}'", with: "\"$1\"")
+            .replacingOccurrences(of: "\"{file}\"", with: "\"$1\"")
+            .replacingOccurrences(of: "{file}", with: "\"$1\"")
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/bin/sh")
-        proc.arguments = ["-c", cmd]
-        try? proc.run()
+        proc.arguments = ["-c", cmd, "winfinder-action", file]
+        do { try proc.run() }
+        catch { model.reportError(error, path: file) }
     }
 
     private static let transparentIcon: NSImage = {
@@ -639,13 +693,14 @@ struct FileListView: View {
         Button { model.compress(selectedItems) } label: {
             Label("Compress to ZIP", systemImage: "archivebox")
         }
+        .disabled(model.isCompressing)
 
         Divider()
 
-        Button { promptNewFolder() } label: {
+        Button { promptNewItem(folder: true) } label: {
             Label("New Folder", systemImage: "folder.badge.plus")
         }
-        Button { promptNewFile() } label: {
+        Button { promptNewItem(folder: false) } label: {
             Label("New File", systemImage: "doc.badge.plus")
         }
 
@@ -670,6 +725,10 @@ struct FileListView: View {
 
     private var statusBar: some View {
         HStack {
+            if model.isCompressing {
+                ProgressView().controlSize(.small)
+                Text("Creating archive…").font(.caption)
+            }
             Text("\(model.displayed.count) items")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -687,6 +746,20 @@ struct FileListView: View {
 
     // MARK: - Context menu helpers
 
+    private func promptNewItem(folder: Bool) {
+        let defaultName = folder ? String(localized: "New Folder") : "Untitled.txt"
+        let title = folder ? String(localized: "New Folder") : String(localized: "New File")
+        nsPrompt(
+            title: title,
+            message: folder ? String(localized: "Folder name:") : String(localized: "File name:"),
+            defaultValue: defaultName,
+            confirmLabel: String(localized: "Create")
+        ) { name in
+            guard !name.contains("/"), name != ".", name != ".." else { return }
+            if folder { model.createFolderNamed(name) } else { model.createFileNamed(name) }
+        }
+    }
+
     private func promptRename(_ item: FileItem) {
         nsPrompt(
             title: String(localized: "Rename"),
@@ -696,24 +769,6 @@ struct FileListView: View {
         ) { newName in
             if newName != item.name { model.rename(item, to: newName) }
         }
-    }
-
-    private func promptNewFolder() {
-        nsPrompt(
-            title: String(localized: "New Folder"),
-            message: String(localized: "Folder name:"),
-            defaultValue: String(localized: "New Folder"),
-            confirmLabel: String(localized: "Create")
-        ) { model.createFolder(named: $0) }
-    }
-
-    private func promptNewFile() {
-        nsPrompt(
-            title: String(localized: "New File"),
-            message: String(localized: "File name:"),
-            defaultValue: String(localized: "Untitled.txt"),
-            confirmLabel: String(localized: "Create")
-        ) { model.createFile(named: $0) }
     }
 
     private func confirmDelete(_ items: [FileItem]) {

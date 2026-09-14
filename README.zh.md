@@ -46,7 +46,7 @@ Win Finder 解决了这些问题。它是一款原生 macOS 文件管理器，�
 ## 安装
 
 ### 系统要求
-- macOS 13 Ventura 或更高版本
+- macOS 14 Sonoma 或更高版本
 - Apple Silicon 或 Intel Mac
 
 ### 从源码构建

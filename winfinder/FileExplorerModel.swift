@@ -171,24 +171,51 @@ final class FileExplorerModel {
     var recentPaths: [String] = []
     var mountedVolumes: [URL] = []
     var customActions: [WFAction] = []
+    private(set) var backStack: [String] = []
+    private(set) var forwardStack: [String] = []
+
+    var canGoBack: Bool { !backStack.isEmpty }
+    var canGoForward: Bool { !forwardStack.isEmpty }
 
     private let fm = FileManager.default
     private let recentsKey = "winfinder.recentPaths"
     @ObservationIgnored private var volumeObservers: [NSObjectProtocol] = []
-    @ObservationIgnored private var cutURLs: Set<URL> = []
+    @ObservationIgnored weak var window: NSWindow?
+    var isActiveWindow: Bool { window != nil && window === NSApp.keyWindow }
+    var operationError: String?
+    private(set) var isCompressing = false
+    private var sortOrder = [KeyPathComparator(\FileItem.name)]
+    private static var cutURLs: Set<URL> = []
+    private static var cutChangeCount = -1
+
+    func reportError(_ error: Error, path: String) {
+        let message = "\(path): \(error.localizedDescription)"
+        operationError = [operationError, message].compactMap { $0 }.joined(separator: "\n")
+    }
+
+    private func perform(on urls: [URL], operation: (URL) throws -> Void) {
+        for url in urls {
+            do { try operation(url) }
+            catch { reportError(error, path: url.path) }
+        }
+        reload()
+    }
     @ObservationIgnored private var eventStream: FSEventStreamRef?
     @ObservationIgnored private var searchToken = SearchCancelToken()
     @ObservationIgnored private let searchQueue =
         DispatchQueue(label: "winfinder.search", qos: .userInitiated)
 
-    init(startPath: String = FileManager.default.homeDirectoryForCurrentUser.path) {
+    init(startPath: String = FileManager.default.homeDirectoryForCurrentUser.path,
+         enableIntegration: Bool = true) {
         currentPath = startPath
         recentPaths = UserDefaults.standard.stringArray(forKey: recentsKey) ?? []
-        loadVolumes()
         reload()
-        startWatching(currentPath)
-        setupVolumeObservers()
-        loadCustomActions()
+        if enableIntegration {
+            loadVolumes()
+            startWatching(currentPath)
+            setupVolumeObservers()
+            loadCustomActions()
+        }
     }
 
     deinit {
@@ -206,6 +233,7 @@ final class FileExplorerModel {
             options: [.skipsHiddenFiles]
         ) else {
             items = []
+            selection = []
             return
         }
         items = contents.compactMap { fileURL -> FileItem? in
@@ -219,19 +247,31 @@ final class FileExplorerModel {
                 size: Int64(rv.fileSize ?? 0),
                 isDirectory: rv.isDirectory ?? false
             )
-        }.sorted {
-            if $0.isDirectory != $1.isDirectory { return $0.isDirectory }
-            return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+        // Keep recursive selections only while their files still exist.
+        let visibleURLs = Set(items.map(\.url))
+        selection = selection.filter {
+            searchText.trimmingCharacters(in: .whitespaces).isEmpty
+                ? visibleURLs.contains($0) : fm.fileExists(atPath: $0.path)
         }
     }
 
     var displayed: [FileItem] {
         let pattern = searchText.trimmingCharacters(in: .whitespaces)
-        guard !pattern.isEmpty else { return items }
-        if pattern.count < 2 {
-            return items.filter { matchesSearch($0.name, pattern: pattern) }
+        let candidates: [FileItem]
+        if pattern.isEmpty { candidates = items }
+        else if pattern.count < 2 {
+            candidates = items.filter { matchesSearch($0.name, pattern: pattern) }
+        } else { candidates = searchResults }
+        // The same ordering applies to folder contents and search results.
+        return candidates.sorted { lhs, rhs in
+            if lhs.isDirectory != rhs.isDirectory { return lhs.isDirectory }
+            for comparator in sortOrder {
+                let result = comparator.compare(lhs, rhs)
+                if result != .orderedSame { return result == .orderedAscending }
+            }
+            return lhs.url.path < rhs.url.path
         }
-        return searchResults
     }
 
     private func scheduleSearch() {
@@ -333,19 +373,50 @@ final class FileExplorerModel {
     // MARK: - Navigation
 
     func navigate(to path: String) {
+        guard path != currentPath else { return }
         var isDir: ObjCBool = false
         guard fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { return }
-        currentPath = path
-        addToRecents(path)
-        reload()
-        startWatching(path)
-        scheduleSearch()
+        backStack.append(currentPath)
+        forwardStack.removeAll()
+        loadPath(path)
     }
 
     func navigateUp() {
         let parent = URL(fileURLWithPath: currentPath).deletingLastPathComponent()
         guard parent.path != currentPath else { return }
         navigate(to: parent.path)
+    }
+
+    func navigateBack() {
+        while let prev = backStack.last {
+            backStack.removeLast()
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: prev, isDirectory: &isDir), isDir.boolValue else { continue }
+            forwardStack.append(currentPath)
+            loadPath(prev)
+            return
+        }
+    }
+
+    func navigateForward() {
+        while let next = forwardStack.last {
+            forwardStack.removeLast()
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: next, isDirectory: &isDir), isDir.boolValue else { continue }
+            backStack.append(currentPath)
+            loadPath(next)
+            return
+        }
+    }
+
+    private func loadPath(_ path: String) {
+        selection = []
+        pendingSelectURL = nil
+        currentPath = path
+        addToRecents(path)
+        reload()
+        startWatching(path)
+        scheduleSearch()
     }
 
     func open(_ item: FileItem) {
@@ -357,7 +428,7 @@ final class FileExplorerModel {
     }
 
     func sort(using order: [KeyPathComparator<FileItem>]) {
-        items.sort(using: order)
+        sortOrder = order
     }
 
     // MARK: - Recents
@@ -442,14 +513,24 @@ final class FileExplorerModel {
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.writeObjects(items.map { $0.url as NSURL })
-        cutURLs = []
+        Self.cutURLs = []
     }
 
     func cut(_ items: [FileItem]) {
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.writeObjects(items.map { $0.url as NSURL })
-        cutURLs = Set(items.map { $0.url })
+        Self.cutURLs = Set(items.map { $0.url })
+        Self.cutChangeCount = pb.changeCount
+        // SwiftUI may publish the item providers after onCutCommand returns.
+        let expected = Self.cutURLs
+        DispatchQueue.main.async {
+            let current = pb.readObjects(forClasses: [NSURL.self],
+                options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+            if Self.cutURLs == expected && Set(current) == expected {
+                Self.cutChangeCount = pb.changeCount
+            }
+        }
     }
 
     func paste() {
@@ -462,14 +543,14 @@ final class FileExplorerModel {
         for src in urls {
             let dest = uniqueDestURL(for: src, in: destDir)
             do {
-                if cutURLs.contains(src) {
+                if Self.cutChangeCount == pb.changeCount && Self.cutURLs.contains(src) {
                     try fm.moveItem(at: src, to: dest)
+                    Self.cutURLs.remove(src)
                 } else {
                     try fm.copyItem(at: src, to: dest)
                 }
-            } catch {}
+            } catch { reportError(error, path: src.path) }
         }
-        cutURLs = []
         reload()
     }
 
@@ -496,52 +577,113 @@ final class FileExplorerModel {
     // MARK: - File operations
 
     func delete(_ items: [FileItem]) {
-        items.forEach { try? fm.trashItem(at: $0.url, resultingItemURL: nil) }
-        reload()
+        perform(on: items.map(\.url)) { try fm.trashItem(at: $0, resultingItemURL: nil) }
     }
 
     func deletePermanently(_ items: [FileItem]) {
-        items.forEach { try? fm.removeItem(at: $0.url) }
-        reload()
+        perform(on: items.map(\.url)) { try fm.removeItem(at: $0) }
     }
 
     func rename(_ item: FileItem, to newName: String) {
         let dest = item.url.deletingLastPathComponent().appendingPathComponent(newName)
-        try? fm.moveItem(at: item.url, to: dest)
-        reload()
+        perform(on: [item.url]) { try fm.moveItem(at: $0, to: dest) }
     }
 
-    func createFolder(named name: String) {
-        let url = URL(fileURLWithPath: currentPath).appendingPathComponent(name)
-        try? fm.createDirectory(at: url, withIntermediateDirectories: false)
-        reload()
+    func createFolder(named name: String) { createFolderNamed(name) }
+
+    func createFile(named name: String) { createFileNamed(name) }
+
+    func createFolderNamed(_ name: String) {
+        createAndSelect(name: name) { url in
+            do { try fm.createDirectory(at: url, withIntermediateDirectories: false); return true }
+            catch { reportError(error, path: url.path); return false }
+        }
     }
 
-    func createFile(named name: String) {
-        let url = URL(fileURLWithPath: currentPath).appendingPathComponent(name)
-        fm.createFile(atPath: url.path, contents: nil)
+    func createFileNamed(_ name: String) {
+        createAndSelect(name: name) { url in
+            do { try Data().write(to: url, options: .withoutOverwriting); return true }
+            catch { reportError(error, path: url.path); return false }
+        }
+    }
+
+    private func createAndSelect(name: String, create: (URL) -> Bool) {
+        let dir  = URL(fileURLWithPath: currentPath)
+        let ns   = name as NSString
+        let ext  = ns.pathExtension
+        let stem = ext.isEmpty ? name : (ns.deletingPathExtension as String)
+
+        var finalName = name
+        var n = 2
+        while fm.fileExists(atPath: dir.appendingPathComponent(finalName).path) {
+            finalName = ext.isEmpty ? "\(stem) \(n)" : "\(stem) \(n).\(ext)"
+            n += 1
+        }
+
+        let url = dir.appendingPathComponent(finalName)
+        guard create(url) else { return }
         reload()
+        pendingSelectURL = url
     }
 
     func compress(_ items: [FileItem]) {
-        guard !items.isEmpty else { return }
+        guard !items.isEmpty, !isCompressing else { return }
+        let destination = URL(fileURLWithPath: currentPath).standardizedFileURL
+        let prefix = destination.path == "/" ? "/" : destination.path + "/"
+        var relativePaths: [String] = []
+        for item in items {
+            let path = item.url.standardizedFileURL.path
+            guard path.hasPrefix(prefix), path != destination.path else {
+                reportError(NSError(domain: "WinFinder", code: 1, userInfo: [
+                    NSLocalizedDescriptionKey: String(localized: "Cannot archive files outside the current folder.")
+                ]), path: item.url.path)
+                return
+            }
+            relativePaths.append("./" + path.dropFirst(prefix.count))
+        }
         let baseName = items.count == 1
             ? items[0].url.deletingPathExtension().lastPathComponent
-            : "Archivio"
-        let destDir = URL(fileURLWithPath: currentPath)
-        var zipURL  = destDir.appendingPathComponent("\(baseName).zip")
-        var n = 1
-        while fm.fileExists(atPath: zipURL.path) {
-            zipURL = destDir.appendingPathComponent("\(baseName) \(n).zip")
-            n += 1
-        }
+            : String(localized: "Archive")
+        let output = uniqueDestURL(for: destination.appendingPathComponent(baseName + ".zip"), in: destination)
+        // Build privately and publish only a completed archive. Never update or
+        // overwrite an existing ZIP, even if another process creates it meanwhile.
+        let staging = destination.appendingPathComponent(".winfinder-zip-" + UUID().uuidString)
+        do { try fm.createDirectory(at: staging, withIntermediateDirectories: false) }
+        catch { reportError(error, path: destination.path); return }
+        let temporaryArchive = staging.appendingPathComponent("archive.zip")
         let process = Process()
-        process.currentDirectoryURL = destDir
+        process.currentDirectoryURL = destination
         process.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
-        process.arguments = ["-r", zipURL.lastPathComponent] + items.map { $0.url.lastPathComponent }
-        try? process.run()
-        process.waitUntilExit()
-        reload()
+        process.arguments = ["-q", "-r", "-y", temporaryArchive.path] + relativePaths
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        isCompressing = true
+        process.terminationHandler = { [weak self] process in
+            let status = process.terminationStatus
+            DispatchQueue.main.async {
+                defer { try? FileManager.default.removeItem(at: staging) }
+                guard let self else { return }
+                self.isCompressing = false
+                do {
+                    guard status == 0 else {
+                        throw NSError(domain: "WinFinder.zip", code: Int(status), userInfo: [
+                            NSLocalizedDescriptionKey: String(localized: "Archive creation failed.") + " (zip: \(status))"
+                        ])
+                    }
+                    try self.fm.moveItem(at: temporaryArchive, to: output)
+                    if URL(fileURLWithPath: self.currentPath).standardizedFileURL == destination {
+                        self.reload()
+                        self.pendingSelectURL = output
+                    }
+                } catch { self.reportError(error, path: output.path) }
+            }
+        }
+        do { try process.run() }
+        catch {
+            isCompressing = false
+            try? fm.removeItem(at: staging)
+            reportError(error, path: output.path)
+        }
     }
 
     // MARK: - Custom actions
@@ -700,7 +842,7 @@ final class FileExplorerModel {
                 } else {
                     try fm.moveItem(at: src, to: dest)
                 }
-            } catch {}
+            } catch { reportError(error, path: src.path) }
         }
         reload()
     }

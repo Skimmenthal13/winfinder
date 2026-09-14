@@ -18,7 +18,7 @@ Open an issue with the `enhancement` label. Describe the Windows Explorer behavi
 1. Fork the repository
 2. Create a branch: `git checkout -b feature/your-feature-name`
 3. Make your changes
-4. Test on macOS 13+ (Ventura or later)
+4. Test on macOS 14+ (Sonoma or later)
 5. Commit with a clear message: `git commit -m "Add: column resizing support"`
 6. Push and open a Pull Request against `main`
 

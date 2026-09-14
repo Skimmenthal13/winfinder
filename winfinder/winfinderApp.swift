@@ -7,6 +7,11 @@ extension Notification.Name {
     static let navigateToPath = Notification.Name("winfinder.navigateToPath")
     static let selectFile = Notification.Name("winfinder.selectFile")
     static let viewReady = Notification.Name("winfinder.viewReady")
+    static let navigateBack = Notification.Name("winfinder.navigateBack")
+    static let navigateForward = Notification.Name("winfinder.navigateForward")
+    static let newFolder      = Notification.Name("winfinder.newFolder")
+    static let newFile        = Notification.Name("winfinder.newFile")
+    static let renameSelected = Notification.Name("winfinder.renameSelected")
 }
 
 // MARK: - AppDelegate
@@ -108,10 +113,34 @@ struct winfinderApp: App {
                 }
             }
             CommandGroup(after: .help) {
+                Button(String(localized: "Keyboard Shortcuts")) {
+                    KeyboardShortcutsWindowController.openOrFocus()
+                }
+                .keyboardShortcut("/", modifiers: .command)
                 Divider()
                 Button("things were better when times were harder") {
                     MinesweeperWindowController.openOrFocus()
                 }
+            }
+            CommandGroup(after: .toolbar) {
+                Button("Back") {
+                    NotificationCenter.default.post(name: .navigateBack, object: nil)
+                }
+                .keyboardShortcut(.leftArrow, modifiers: .option)
+                Button("Forward") {
+                    NotificationCenter.default.post(name: .navigateForward, object: nil)
+                }
+                .keyboardShortcut(.rightArrow, modifiers: .option)
+            }
+            CommandGroup(after: .newItem) {
+                Button("New Folder") {
+                    NotificationCenter.default.post(name: .newFolder, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+                Button("New File") {
+                    NotificationCenter.default.post(name: .newFile, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: [.command, .shift])
             }
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") {

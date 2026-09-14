@@ -75,7 +75,7 @@ Win Finder reads these files at startup and adds the actions to the right-click 
 ## Installation
 
 ### Requirements
-- macOS 13 Ventura or later
+- macOS 14 Sonoma or later
 - Apple Silicon or Intel Mac
 
 ### Build from source

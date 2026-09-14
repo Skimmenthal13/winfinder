@@ -75,7 +75,7 @@ Win Finder legge questi file all'avvio e aggiunge le azioni al menu contestuale 
 ## Installazione
 
 ### Requisiti
-- macOS 13 Ventura o successivo
+- macOS 14 Sonoma o successivo
 - Mac Apple Silicon o Intel
 
 ### Compila dal sorgente

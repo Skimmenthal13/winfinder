@@ -30,9 +30,11 @@ final class KeyDeleteNSView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        model?.window = window
         guard window != nil, monitor == nil else { return }
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handle(event) ?? event
+            guard let self else { return event }
+            return self.handle(event)
         }
     }
 
@@ -47,6 +49,15 @@ final class KeyDeleteNSView: NSView {
     // MARK: Event handling
 
     private func handle(_ event: NSEvent) -> NSEvent? {
+        guard let window, event.window === window, window.isKeyWindow else { return event }
+        // keyCode 120 = F2 — rename selected item (Windows Explorer convention).
+        if event.keyCode == 120 {
+            if NSApp.keyWindow?.firstResponder is NSText { return event }
+            guard let model, model.selection.count == 1 else { return event }
+            NotificationCenter.default.post(name: .renameSelected, object: nil)
+            return nil
+        }
+
         // keyCode 51 = Delete (⌫). Forward Delete (⌦) is 117 — not handled here.
         guard event.keyCode == 51 else { return event }
 

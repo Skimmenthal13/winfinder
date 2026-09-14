@@ -81,3 +81,23 @@
 
 /* Model errors */
 "Enter a command or at least one submenu item." = "Introduce un comando o al menos un elemento del submenú.";
+
+/* Keyboard shortcuts panel */
+"Keyboard Shortcuts" = "Atajos de teclado";
+"Navigation" = "Navegación";
+"Files and Folders" = "Archivos y carpetas";
+"Back" = "Atrás";
+"Forward" = "Adelante";
+"New Window" = "Nueva ventana";
+"General" = "General";
+"Delete Permanently" = "Eliminar definitivamente";
+"Settings" = "Configuración";
+
+/* File operation errors */
+"Operation failed" = "Error en la operación";
+
+/* Compression */
+"Archive" = "Archivo";
+"Creating archive…" = "Creando archivo…";
+"Archive creation failed." = "No se pudo crear el archivo.";
+"Cannot archive files outside the current folder." = "No se pueden comprimir archivos fuera de la carpeta actual.";

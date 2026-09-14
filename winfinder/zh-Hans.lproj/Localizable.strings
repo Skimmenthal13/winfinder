@@ -81,3 +81,23 @@
 
 /* Model errors */
 "Enter a command or at least one submenu item." = "请输入命令或至少一个子菜单项目。";
+
+/* Keyboard shortcuts panel */
+"Keyboard Shortcuts" = "键盘快捷键";
+"Navigation" = "导航";
+"Files and Folders" = "文件与文件夹";
+"Back" = "后退";
+"Forward" = "前进";
+"New Window" = "新建窗口";
+"General" = "通用";
+"Delete Permanently" = "永久删除";
+"Settings" = "设置";
+
+/* File operation errors */
+"Operation failed" = "操作失败";
+
+/* Compression */
+"Archive" = "归档";
+"Creating archive…" = "正在创建归档…";
+"Archive creation failed." = "归档创建失败。";
+"Cannot archive files outside the current folder." = "无法归档当前文件夹之外的文件。";

@@ -28,7 +28,7 @@
 
 ## Checklist
 
-- [ ] Tested on macOS 13+ (Ventura or later)
+- [ ] Tested on macOS 14+ (Sonoma or later)
 - [ ] Works on both Apple Silicon and Intel (or only one — please specify)
 - [ ] No new external dependencies introduced
 - [ ] Code follows the existing style in the codebase

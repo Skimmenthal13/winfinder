@@ -81,3 +81,23 @@
 
 /* Model errors */
 "Enter a command or at least one submenu item." = "Ampidiro ny baiko na farafahakeliny zavatra submenio iray.";
+
+/* Keyboard shortcuts panel */
+"Keyboard Shortcuts" = "Fanafohezana ny fanalahidy";
+"Navigation" = "Fitondrana";
+"Files and Folders" = "Rakitra sy folder";
+"Back" = "Miverina";
+"Forward" = "Mizotra";
+"New Window" = "Vaovao window";
+"General" = "Ankapobeny";
+"Delete Permanently" = "Fafao tanteraka";
+"Settings" = "Fikirana";
+
+/* File operation errors */
+"Operation failed" = "Tsy nahomby ny asa";
+
+/* Compression */
+"Archive" = "Tahiry";
+"Creating archive…" = "Mamorona tahiry…";
+"Archive creation failed." = "Tsy nahomby ny famoronana tahiry.";
+"Cannot archive files outside the current folder." = "Tsy azo atao tahiry ny rakitra ivelan’ity lahatahiry ity.";
