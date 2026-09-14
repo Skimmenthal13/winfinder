@@ -101,3 +101,9 @@
 "Creating archive…" = "正在创建归档…";
 "Archive creation failed." = "归档创建失败。";
 "Cannot archive files outside the current folder." = "无法归档当前文件夹之外的文件。";
+
+/* Transfers and search */
+"Transferring %lld of %lld" = "正在传输 %lld / %lld";
+"First 500 results — refine your search" = "前 500 条结果 — 请缩小搜索范围";
+"Cannot transfer a folder into itself." = "无法将文件夹传输到其自身内部。";
+"These files are already being moved." = "这些文件已在移动中。";

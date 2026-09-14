@@ -101,3 +101,9 @@
 "Creating archive…" = "Creating archive…";
 "Archive creation failed." = "Archive creation failed.";
 "Cannot archive files outside the current folder." = "Cannot archive files outside the current folder.";
+
+/* Transfers and search */
+"Transferring %lld of %lld" = "Transferring %lld of %lld";
+"First 500 results — refine your search" = "First 500 results — refine your search";
+"Cannot transfer a folder into itself." = "Cannot transfer a folder into itself.";
+"These files are already being moved." = "These files are already being moved.";

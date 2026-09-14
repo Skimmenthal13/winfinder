@@ -101,3 +101,9 @@
 "Creating archive…" = "Mamorona tahiry…";
 "Archive creation failed." = "Tsy nahomby ny famoronana tahiry.";
 "Cannot archive files outside the current folder." = "Tsy azo atao tahiry ny rakitra ivelan’ity lahatahiry ity.";
+
+/* Transfers and search */
+"Transferring %lld of %lld" = "Mamindra %lld amin’ny %lld";
+"First 500 results — refine your search" = "Valiny 500 voalohany — ferano ny fikarohana";
+"Cannot transfer a folder into itself." = "Tsy azo afindra ao anatiny ny lahatahiry.";
+"These files are already being moved." = "Efa afindra ireo rakitra ireo.";

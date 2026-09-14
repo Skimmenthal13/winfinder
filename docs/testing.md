@@ -37,3 +37,17 @@ in each; rename/delete only in the active window; cut in one and paste in the
 other; navigate back/forward; try renaming to an existing name. Verify that
 compression leaves the interface responsive and that an error never leaves a
 partial ZIP exposed as the final archive.
+
+Transfers use a shared background queue, with progress measured in completed
+items rather than bytes. Copies are built in a private temporary folder and
+published when complete. Moving a folder into itself is rejected, including
+paths that traverse symlinks. Moving an item to its existing parent is a no-op.
+Errors are collected after the batch; a failed cut/paste can be retried without
+moving successful items again. Clipboard tests use uniquely named pasteboards,
+so they do not replace the user's clipboard.
+
+Recursive search waits 200 ms after changes, cancels obsolete work with a
+synchronized token, and refreshes through the same reload path used by filesystem
+events. A notice appears only when more than 500 entries match. Tests exercise
+refresh, rapid query changes, the 500/501 boundary, transfer collisions, partial
+failure and clipboard retries.

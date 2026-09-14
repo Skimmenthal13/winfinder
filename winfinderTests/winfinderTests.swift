@@ -1,7 +1,9 @@
 import Foundation
+import AppKit
 import Testing
 @testable import Win_Finder
 
+@Suite(.serialized)
 @MainActor
 struct FileExplorerTests {
     private func fixture() throws -> URL {
@@ -152,6 +154,187 @@ struct FileExplorerTests {
         #expect(model.operationError == nil)
         let output = try #require(model.pendingSelectURL)
         #expect(try unzip(output, member: filename) == "literal content")
+    }
+
+    private func finishTransfer(_ model: FileExplorerModel) async throws {
+        for _ in 0..<500 {
+            if !model.isTransferring { return }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        Issue.record("Transfer timed out")
+    }
+
+    private func finishSearch(_ model: FileExplorerModel) async throws {
+        for _ in 0..<500 {
+            if !model.isSearching { return }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        Issue.record("Search timed out")
+    }
+
+    @Test func asyncCopyPreservesSourceAndExistingDestination() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let destination = root.appendingPathComponent("destination")
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        let source = root.appendingPathComponent("note.txt")
+        try write("source", to: source)
+        try write("existing", to: destination.appendingPathComponent("note.txt"))
+        let model = FileExplorerModel(startPath: destination.path, enableIntegration: false)
+        model.moveFiles([source], to: destination.path, copy: true)
+        #expect(model.isTransferring)
+        try await finishTransfer(model)
+        #expect(model.operationError == nil)
+        #expect(model.transferCompleted == 1)
+        #expect(try String(contentsOf: source, encoding: .utf8) == "source")
+        #expect(try String(contentsOf: destination.appendingPathComponent("note.txt"), encoding: .utf8) == "existing")
+        let copied = try #require(model.selection.first)
+        #expect(copied.lastPathComponent != "note.txt")
+        #expect(try String(contentsOf: copied, encoding: .utf8) == "source")
+        #expect(try FileManager.default.contentsOfDirectory(atPath: destination.path).count == 2)
+    }
+
+    @Test func asyncMoveReportsPartialFailureAndKeepsSuccessfulMove() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let destination = root.appendingPathComponent("destination")
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        let source = root.appendingPathComponent("note.txt")
+        try write("source", to: source)
+        let model = FileExplorerModel(startPath: destination.path, enableIntegration: false)
+        model.moveFiles([root.appendingPathComponent("missing.txt"), source], to: destination.path, copy: false)
+        try await finishTransfer(model)
+        #expect(model.transferCompleted == 2)
+        #expect(model.operationError?.contains("missing.txt") == true)
+        #expect(!FileManager.default.fileExists(atPath: source.path))
+        #expect(try String(contentsOf: destination.appendingPathComponent("note.txt"), encoding: .utf8) == "source")
+    }
+
+    @Test func movingIntoSameDirectoryDoesNotRename() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let file = root.appendingPathComponent("note.txt")
+        try write("keep", to: file)
+        let model = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        model.moveFiles([file], to: root.path, copy: false)
+        try await finishTransfer(model)
+        #expect(model.operationError == nil)
+        #expect(model.items.map(\.name) == ["note.txt"])
+    }
+
+    @Test func copyingFolderIntoDescendantIsRejected() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let destination = root.appendingPathComponent("child")
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        let model = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        model.moveFiles([root], to: destination.path, copy: true)
+        try await finishTransfer(model)
+        #expect(model.operationError != nil)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: destination.path).isEmpty)
+    }
+
+    @Test func searchRefreshesAfterFilesystemReload() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let folder = root.appendingPathComponent("child")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let first = folder.appendingPathComponent("first.txt")
+        try write("one", to: first)
+        let model = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        model.searchText = ".txt"
+        try await finishSearch(model)
+        #expect(model.displayed.map(\.name) == ["first.txt"])
+        try FileManager.default.removeItem(at: first)
+        try write("two", to: folder.appendingPathComponent("second.txt"))
+        model.reload() // Same entry point used by the filesystem event callback.
+        try await finishSearch(model)
+        #expect(model.displayed.map(\.name) == ["second.txt"])
+    }
+
+    @Test func searchOnlyPublishesLatestQueryAndSortOrder() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        try write("a", to: root.appendingPathComponent("small.txt"))
+        try write("abcde", to: root.appendingPathComponent("large.txt"))
+        try write("other", to: root.appendingPathComponent("other.pdf"))
+        let model = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        model.searchText = ".pdf"
+        model.searchText = ".txt"
+        model.sort(using: [KeyPathComparator(\FileItem.size, order: .reverse)])
+        try await finishSearch(model)
+        #expect(model.displayed.map(\.name) == ["large.txt", "small.txt"])
+        model.searchText = ".pdf"
+        model.searchText = ""
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(!model.isSearching)
+        #expect(model.searchResults.isEmpty)
+        #expect(model.displayed.count == 3)
+    }
+
+    @Test func searchReportsTruncationOnlyWhenMoreThan500Match() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        for number in 0..<501 { try write("x", to: root.appendingPathComponent("\(number).txt")) }
+        let model = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        model.searchText = ".txt"
+        try await finishSearch(model)
+        #expect(model.displayed.count == 500)
+        #expect(model.searchIsTruncated)
+        try FileManager.default.removeItem(at: root.appendingPathComponent("500.txt"))
+        model.reload()
+        try await finishSearch(model)
+        #expect(model.displayed.count == 500)
+        #expect(!model.searchIsTruncated)
+    }
+
+    @Test func clipboardMoveBetweenModelsUpdatesPathsForNextPaste() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let destination = root.appendingPathComponent("destination")
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        let source = root.appendingPathComponent("note.txt")
+        try write("original", to: source)
+        let from = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        let to = FileExplorerModel(startPath: destination.path, enableIntegration: false)
+        let item = try #require(from.items.first { $0.name == "note.txt" })
+        from.cut([item], pasteboard: board)
+        to.paste(pasteboard: board)
+        try await finishTransfer(to)
+        #expect(to.operationError == nil)
+        #expect(!FileManager.default.fileExists(atPath: source.path))
+        to.paste(pasteboard: board)
+        try await finishTransfer(to)
+        #expect(to.operationError == nil)
+        #expect(to.items.count == 2)
+    }
+
+    @Test func clipboardRetryOnlyMovesFailedItems() async throws {
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let destination = root.appendingPathComponent("destination")
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false)
+        for name in ["first.txt", "second.txt"] { try write(name, to: root.appendingPathComponent(name)) }
+        let from = FileExplorerModel(startPath: root.path, enableIntegration: false)
+        let to = FileExplorerModel(startPath: destination.path, enableIntegration: false)
+        from.cut(from.items.filter { !$0.isDirectory }, pasteboard: board)
+        let second = root.appendingPathComponent("second.txt")
+        try FileManager.default.removeItem(at: second)
+        to.paste(pasteboard: board)
+        try await finishTransfer(to)
+        #expect(to.operationError != nil)
+        #expect(to.items.count == 1)
+        try write("restored", to: second)
+        to.operationError = nil
+        to.paste(pasteboard: board)
+        try await finishTransfer(to)
+        #expect(to.operationError == nil)
+        #expect(!FileManager.default.fileExists(atPath: second.path))
+        #expect(Set(to.items.map(\.name)) == ["first.txt", "second.txt"])
     }
 
 }

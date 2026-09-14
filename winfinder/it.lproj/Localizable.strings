@@ -101,3 +101,9 @@
 "Creating archive…" = "Creazione archivio…";
 "Archive creation failed." = "Creazione archivio non riuscita.";
 "Cannot archive files outside the current folder." = "Impossibile archiviare file esterni alla cartella corrente.";
+
+/* Transfers and search */
+"Transferring %lld of %lld" = "Trasferimento %lld di %lld";
+"First 500 results — refine your search" = "Primi 500 risultati — affina la ricerca";
+"Cannot transfer a folder into itself." = "Impossibile trasferire una cartella al suo interno.";
+"These files are already being moved." = "Questi file sono già in fase di spostamento.";

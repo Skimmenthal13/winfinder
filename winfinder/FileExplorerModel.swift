@@ -4,7 +4,7 @@ import CoreServices
 
 // MARK: - FileItem
 
-struct FileItem: Identifiable {
+nonisolated struct FileItem: Identifiable, Sendable {
     var id: URL { url }   // stable across reloads — same file = same id
     let url: URL
     let name: String
@@ -15,7 +15,7 @@ struct FileItem: Identifiable {
 
     var displayName: String { name.replacingOccurrences(of: ":", with: "/") }
 
-    var icon: NSImage { NSWorkspace.shared.icon(forFile: url.path) }
+    @MainActor var icon: NSImage { NSWorkspace.shared.icon(forFile: url.path) }
 
     var sizeFormatted: String {
         guard !isDirectory else { return "" }
@@ -152,9 +152,11 @@ extension WFAction {
 
 // MARK: - SearchCancelToken
 
-private final class SearchCancelToken {
-    private(set) var isCancelled = false
-    func cancel() { isCancelled = true }
+private nonisolated final class SearchCancelToken: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+    var isCancelled: Bool { lock.withLock { cancelled } }
+    func cancel() { lock.withLock { cancelled = true } }
 }
 
 // MARK: - FileExplorerModel
@@ -166,6 +168,7 @@ final class FileExplorerModel {
     var items: [FileItem] = []
     var searchResults: [FileItem] = []
     var isSearching = false
+    private(set) var searchIsTruncated = false
     var selection: Set<URL> = []
     var pendingSelectURL: URL? = nil
     var recentPaths: [String] = []
@@ -184,9 +187,15 @@ final class FileExplorerModel {
     var isActiveWindow: Bool { window != nil && window === NSApp.keyWindow }
     var operationError: String?
     private(set) var isCompressing = false
+    private(set) var isTransferring = false
+    private(set) var transferCompleted = 0
+    private(set) var transferTotal = 0
+    private static var inFlightCutURLs: Set<URL> = []
+    private static var cutGeneration = UUID()
     private var sortOrder = [KeyPathComparator(\FileItem.name)]
     private static var cutURLs: Set<URL> = []
     private static var cutChangeCount = -1
+    private static var cutPasteboardName: NSPasteboard.Name?
 
     func reportError(_ error: Error, path: String) {
         let message = "\(path): \(error.localizedDescription)"
@@ -219,6 +228,7 @@ final class FileExplorerModel {
     }
 
     deinit {
+        searchToken.cancel()
         stopWatching()
         volumeObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
     }
@@ -234,6 +244,7 @@ final class FileExplorerModel {
         ) else {
             items = []
             selection = []
+            scheduleSearch()
             return
         }
         items = contents.compactMap { fileURL -> FileItem? in
@@ -254,6 +265,7 @@ final class FileExplorerModel {
             searchText.trimmingCharacters(in: .whitespaces).isEmpty
                 ? visibleURLs.contains($0) : fm.fileExists(atPath: $0.path)
         }
+        scheduleSearch(preserveResults: true)
     }
 
     var displayed: [FileItem] {
@@ -261,7 +273,7 @@ final class FileExplorerModel {
         let candidates: [FileItem]
         if pattern.isEmpty { candidates = items }
         else if pattern.count < 2 {
-            candidates = items.filter { matchesSearch($0.name, pattern: pattern) }
+            candidates = items.filter { Self.matchesSearch($0.name, pattern: pattern) }
         } else { candidates = searchResults }
         // The same ordering applies to folder contents and search results.
         return candidates.sorted { lhs, rhs in
@@ -274,12 +286,13 @@ final class FileExplorerModel {
         }
     }
 
-    private func scheduleSearch() {
+    private func scheduleSearch(preserveResults: Bool = false) {
         let pattern = searchText.trimmingCharacters(in: .whitespaces)
         searchToken.cancel()
 
         guard !pattern.isEmpty, pattern.count >= 2 else {
             searchResults = []
+            searchIsTruncated = false
             isSearching = false
             return
         }
@@ -287,46 +300,53 @@ final class FileExplorerModel {
         let token = SearchCancelToken()
         searchToken = token
         isSearching = true
-        searchResults = []
+        if !preserveResults {
+            searchResults = []
+            searchIsTruncated = false
+            selection = []
+        }
         let basePath = currentPath
 
-        searchQueue.async { [weak self] in
-            guard let self else { return }
-            let results = self.performRecursiveSearch(
+        searchQueue.asyncAfter(deadline: .now() + .milliseconds(200)) { [weak self] in
+            guard !token.isCancelled else { return }
+            let results = Self.performRecursiveSearch(
                 pattern: pattern,
                 basePath: basePath,
                 isCancelled: { token.isCancelled }
             )
             DispatchQueue.main.async { [weak self] in
                 guard let self, !token.isCancelled else { return }
-                self.searchResults = results
+                self.searchResults = results.items
+                self.searchIsTruncated = results.truncated
+                self.selection.formIntersection(Set(results.items.map(\.url)))
                 self.isSearching = false
             }
         }
     }
 
-    private func performRecursiveSearch(
+    private nonisolated static func performRecursiveSearch(
         pattern: String,
         basePath: String,
         isCancelled: () -> Bool
-    ) -> [FileItem] {
+    ) -> (items: [FileItem], truncated: Bool) {
         let baseURL = URL(fileURLWithPath: basePath)
         let keys: Set<URLResourceKey> = [.contentModificationDateKey, .fileSizeKey, .isDirectoryKey]
         guard let enumerator = FileManager().enumerator(
             at: baseURL,
             includingPropertiesForKeys: Array(keys),
             options: [.skipsHiddenFiles]
-        ) else { return [] }
+        ) else { return ([], false) }
 
         let maxResults = 500
         var results: [FileItem] = []
+        var truncated = false
         for case let fileURL as URL in enumerator {
-            if isCancelled() { return [] }
-            if results.count >= maxResults { break }
+            if isCancelled() { return ([], false) }
 
             let name = fileURL.lastPathComponent
             guard matchesSearch(name, pattern: pattern) else { continue }
             guard let rv = try? fileURL.resourceValues(forKeys: keys) else { continue }
+            if results.count == maxResults { truncated = true; break }
 
             let parentPath = fileURL.deletingLastPathComponent().path
             let relativePath: String?
@@ -348,13 +368,10 @@ final class FileExplorerModel {
                 relativePath: relativePath
             ))
         }
-        return results.sorted {
-            if $0.isDirectory != $1.isDirectory { return $0.isDirectory }
-            return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
+        return (results, truncated)
     }
 
-    private func matchesSearch(_ name: String, pattern: String) -> Bool {
+    private nonisolated static func matchesSearch(_ name: String, pattern: String) -> Bool {
         // ".pdf"  → extension == pdf
         // "."     → any file that has an extension
         if pattern.hasPrefix("."), !pattern.contains("*"), !pattern.contains("?") {
@@ -412,11 +429,11 @@ final class FileExplorerModel {
     private func loadPath(_ path: String) {
         selection = []
         pendingSelectURL = nil
+        searchResults = []
         currentPath = path
         addToRecents(path)
         reload()
         startWatching(path)
-        scheduleSearch()
     }
 
     func open(_ item: FileItem) {
@@ -509,17 +526,18 @@ final class FileExplorerModel {
 
     // MARK: - Clipboard
 
-    func copy(_ items: [FileItem]) {
-        let pb = NSPasteboard.general
+    func copy(_ items: [FileItem], pasteboard pb: NSPasteboard = .general) {
         pb.clearContents()
         pb.writeObjects(items.map { $0.url as NSURL })
         Self.cutURLs = []
+        Self.cutGeneration = UUID()
     }
 
-    func cut(_ items: [FileItem]) {
-        let pb = NSPasteboard.general
+    func cut(_ items: [FileItem], pasteboard pb: NSPasteboard = .general) {
         pb.clearContents()
         pb.writeObjects(items.map { $0.url as NSURL })
+        Self.cutGeneration = UUID()
+        Self.cutPasteboardName = pb.name
         Self.cutURLs = Set(items.map { $0.url })
         Self.cutChangeCount = pb.changeCount
         // SwiftUI may publish the item providers after onCutCommand returns.
@@ -533,29 +551,41 @@ final class FileExplorerModel {
         }
     }
 
-    func paste() {
-        let pb = NSPasteboard.general
+    func paste(pasteboard pb: NSPasteboard = .general) {
         guard let urls = pb.readObjects(
             forClasses: [NSURL.self],
             options: [.urlReadingFileURLsOnly: true]
         ) as? [URL] else { return }
-        let destDir = URL(fileURLWithPath: currentPath)
-        for src in urls {
-            let dest = uniqueDestURL(for: src, in: destDir)
-            do {
-                if Self.cutChangeCount == pb.changeCount && Self.cutURLs.contains(src) {
-                    try fm.moveItem(at: src, to: dest)
-                    Self.cutURLs.remove(src)
-                } else {
-                    try fm.copyItem(at: src, to: dest)
-                }
-            } catch { reportError(error, path: src.path) }
+        guard !isTransferring else { return }
+        let changeCount = pb.changeCount
+        let generation = Self.cutGeneration
+        let moving = Self.cutPasteboardName == pb.name && Self.cutChangeCount == changeCount
+            ? Self.cutURLs.intersection(urls) : []
+        guard moving.isDisjoint(with: Self.inFlightCutURLs) else {
+            operationError = String(localized: "These files are already being moved.")
+            return
         }
-        reload()
+        Self.inFlightCutURLs.formUnion(moving)
+        beginTransfer(urls, destination: URL(fileURLWithPath: currentPath), moving: moving) { result in
+            Self.inFlightCutURLs.subtract(moving)
+            guard Self.cutGeneration == generation, pb.changeCount == changeCount else { return }
+            Self.cutURLs.subtract(result.movedSources)
+            if !result.movedSources.isEmpty {
+                // Successful moves now refer to their new paths. Failed moves
+                // retain their old paths and cut status, so Paste can retry them.
+                let outstanding = moving.subtracting(result.movedSources)
+                let updated = outstanding.isEmpty
+                    ? urls.map { result.destinations[$0] ?? $0 }
+                    : urls.filter { !result.movedSources.contains($0) }
+                pb.clearContents()
+                pb.writeObjects(updated.map { $0 as NSURL })
+                Self.cutChangeCount = pb.changeCount
+            }
+        }
     }
 
     func canPaste() -> Bool {
-        NSPasteboard.general.canReadObject(
+        !isTransferring && NSPasteboard.general.canReadObject(
             forClasses: [NSURL.self],
             options: [NSPasteboard.ReadingOptionKey.urlReadingFileURLsOnly: true]
         )
@@ -833,18 +863,35 @@ final class FileExplorerModel {
     // MARK: - Drag and drop
 
     func moveFiles(_ urls: [URL], to destPath: String, copy: Bool) {
-        let destDir = URL(fileURLWithPath: destPath)
-        for src in urls {
-            let dest = uniqueDestURL(for: src, in: destDir)
-            do {
-                if copy {
-                    try fm.copyItem(at: src, to: dest)
-                } else {
-                    try fm.moveItem(at: src, to: dest)
+        beginTransfer(urls, destination: URL(fileURLWithPath: destPath),
+                      moving: copy ? [] : Set(urls))
+    }
+
+    private func beginTransfer(_ urls: [URL], destination: URL, moving: Set<URL>,
+                               completion: ((FileTransferResult) -> Void)? = nil) {
+        guard !urls.isEmpty, !isTransferring else { return }
+        let sources = urls.reduce(into: [URL]()) { if !$0.contains($1) { $0.append($1) } }
+        isTransferring = true
+        transferCompleted = 0
+        transferTotal = sources.count
+        FileTransferWorker.queue.async { [self] in
+            let result = FileTransferWorker.run(sources, destination: destination, moving: moving) { count in
+                DispatchQueue.main.async { self.transferCompleted = count }
+            }
+            DispatchQueue.main.async {
+                self.isTransferring = false
+                completion?(result)
+                if !result.errors.isEmpty {
+                    self.operationError = ([self.operationError].compactMap { $0 } + result.errors)
+                        .joined(separator: "\n")
                 }
-            } catch { reportError(error, path: src.path) }
+                self.reload()
+                if URL(fileURLWithPath: self.currentPath).standardizedFileURL == destination.standardizedFileURL,
+                   self.searchText.isEmpty {
+                    self.selection = Set(result.destinations.values)
+                }
+            }
         }
-        reload()
     }
 
     // MARK: - Open with

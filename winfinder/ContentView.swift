@@ -729,6 +729,14 @@ struct FileListView: View {
                 ProgressView().controlSize(.small)
                 Text("Creating archive…").font(.caption)
             }
+            if model.isTransferring {
+                ProgressView(value: Double(model.transferCompleted), total: Double(max(model.transferTotal, 1)))
+                    .frame(width: 70)
+                Text("Transferring \(model.transferCompleted) of \(model.transferTotal)").font(.caption)
+            }
+            if model.searchIsTruncated {
+                Text("First 500 results — refine your search").font(.caption)
+            }
             Text("\(model.displayed.count) items")
                 .font(.caption)
                 .foregroundStyle(.secondary)
