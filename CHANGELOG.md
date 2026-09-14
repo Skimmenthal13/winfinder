@@ -36,5 +36,6 @@
 
 ### Validation limits
 - Local tests run on the available Mac. Runtime testing on macOS 14/15 is pending.
-- GitHub Actions has not run remotely yet. Signing, notarization and publishing
-  are not part of this local candidate build.
+- GitHub Actions has not run remotely yet. Developer ID signing and Apple
+  notarization are complete for the app and DMG, with stapled tickets and
+  successful Gatekeeper checks. Publishing is still pending.
