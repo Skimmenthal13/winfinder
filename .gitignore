@@ -1,2 +1,5 @@
 # Local signed release packages and notarization receipts
 release-artifacts/
+
+# Private release guide contains credentials
+docs/WinFinder_Release_Guide_v2.pages
