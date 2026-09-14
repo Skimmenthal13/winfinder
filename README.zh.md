@@ -49,6 +49,8 @@ Win Finder 解决了这些问题。它是一款原生 macOS 文件管理器，�
 - macOS 14 Sonoma 或更高版本
 - Apple Silicon 或 Intel Mac
 
+> 源码支持 macOS 14 及以上版本。当前发布的 v0.2.0 DMG 仍需 macOS 26；兼容性修复已为即将发布的 0.3.0 版本准备好。
+
 ### 从源码构建
 
 ```bash

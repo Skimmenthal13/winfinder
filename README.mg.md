@@ -49,6 +49,8 @@ Ny app rehetra dia afaka mifandray amin'ny Win Finder amin'ny alalan'ny famorona
 - macOS 14 Sonoma na any ambony kokoa
 - Mac Apple Silicon na Intel
 
+> Ny kaody loharano dia mitaky macOS 14+. Ny DMG v0.2.0 efa navoaka dia mbola mitaky macOS 26; voaomana ho an’ny kinova 0.3.0 manaraka ny fanitsiana.
+
 ### Amboary avy amin'ny loharano
 
 ```bash

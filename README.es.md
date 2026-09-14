@@ -49,6 +49,8 @@ Cualquier app puede integrarse con Win Finder creando una carpeta en `~/.config/
 - macOS 14 Sonoma o posterior
 - Mac Apple Silicon o Intel
 
+> El código fuente requiere macOS 14+. El DMG v0.2.0 publicado todavía requiere macOS 26; la corrección está preparada para la próxima versión 0.3.0.
+
 ### Compilar desde el código fuente
 
 ```bash

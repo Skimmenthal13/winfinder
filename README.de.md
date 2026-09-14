@@ -49,6 +49,8 @@ Jede App kann sich mit Win Finder integrieren, indem ein Ordner in `~/.config/wi
 - macOS 14 Sonoma oder neuer
 - Apple Silicon oder Intel Mac
 
+> Der Quellcode unterstützt macOS 14+. Das veröffentlichte DMG v0.2.0 benötigt weiterhin macOS 26; die Korrektur ist für die kommende Version 0.3.0 vorbereitet.
+
 ### Aus dem Quellcode erstellen
 
 ```bash

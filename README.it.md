@@ -78,6 +78,8 @@ Win Finder legge questi file all'avvio e aggiunge le azioni al menu contestuale 
 - macOS 14 Sonoma o successivo
 - Mac Apple Silicon o Intel
 
+> Il sorgente richiede macOS 14+. Il DMG v0.2.0 attualmente pubblicato richiede ancora macOS 26; la correzione è preparata per la prossima versione 0.3.0.
+
 ### Compila dal sorgente
 
 ```bash

@@ -78,6 +78,8 @@ Win Finder reads these files at startup and adds the actions to the right-click 
 - macOS 14 Sonoma or later
 - Apple Silicon or Intel Mac
 
+> The source targets macOS 14+. The currently published v0.2.0 DMG still requires macOS 26; the compatibility fix is prepared for the upcoming 0.3.0 release.
+
 ### Build from source
 
 ```bash
