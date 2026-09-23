@@ -1,0 +1,7 @@
+# Project-level copy; crawlers use https://skimmenthal13.github.io/robots.txt.
+# This subdirectory file does not control crawling. Submit the sitemap
+# directly in Google Search Console for the /winfinder/ URL-prefix property.
+User-agent: *
+Allow: /winfinder/
+
+Sitemap: https://skimmenthal13.github.io/winfinder/sitemap.xml
