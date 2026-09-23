@@ -6,6 +6,18 @@ Un file manager per macOS che ti fa sentire a casa — per chi viene da Windows.
 
 ![Win Finder screenshot](docs/screenshot.png)
 
+## Novità della versione 0.3.0
+
+- **Risolta la [issue #2](https://github.com/Skimmenthal13/winfinder/issues/2)** — corretta la discrepanza tra i requisiti macOS documentati e l’app distribuita. La versione 0.3.0 richiede macOS 14 Sonoma o successivo su Apple Silicon e Intel; macOS 13 non è supportato.
+- **Trasferimenti più reattivi** — copia e spostamento avvengono in background, con avanzamento per elemento e riepilogo degli errori. Le copie incomplete non vengono esposte come file completati.
+- **Operazioni sui file più affidabili** — taglia/incolla funziona tra finestre e gli spostamenti falliti possono essere ritentati. I comandi da tastiera agiscono solo sulla finestra attiva; gli errori di creazione, rinomina ed eliminazione vengono segnalati.
+- **Creazione ZIP in background** — conserva i percorsi delle sottocartelle e gli archivi esistenti, evitando di lasciare archivi incompleti se la compressione fallisce.
+- **Navigazione e scorciatoie** — cronologia avanti/indietro con `Option+Sinistra/Destra`, rinomina con `F2`, scorciatoie per nuovi file e cartelle e pannello delle scorciatoie da tastiera.
+- **Ricerca e ordinamento** — le ricerche attive si aggiornano quando cambiano i file, quelle obsolete vengono annullate e un avviso segnala oltre 500 corrispondenze. L’ordinamento viene mantenuto durante aggiornamenti e ricerche, con le cartelle in cima; le selezioni obsolete vengono rimosse dopo navigazione o eliminazione.
+- **Estensioni e controlli di qualità** — migliorata la gestione dei percorsi nei comandi delle estensioni, aggiunti 17 test di regressione e controlli automatici di compatibilità delle build universali.
+
+[Scarica la 0.3.0 e leggi le note di rilascio](https://github.com/Skimmenthal13/winfinder/releases/tag/v0.3.0). App e DMG sono firmati con Developer ID e notarizzati da Apple. Sono stati verificati il requisito minimo del sistema e le due architetture; restano in attesa la prova diretta su macOS 14/15 e la conferma dell’autore della issue.
+
 ## Perché Win Finder?
 
 macOS è un ottimo sistema operativo. Ma se hai passato anni su Windows, il Finder ti sembrerà sbagliato in modi difficili da spiegare: nessuna barra del percorso modificabile, nessuna ricerca inline, nessun "Nuovo file" col tasto destro, il tasto Canc non cancella. Piccole cose che sommate creano attrito costante.
@@ -78,7 +90,7 @@ Win Finder legge questi file all'avvio e aggiunge le azioni al menu contestuale 
 - macOS 14 Sonoma o successivo
 - Mac Apple Silicon o Intel
 
-> Il sorgente richiede macOS 14+. Il DMG v0.2.0 attualmente pubblicato richiede ancora macOS 26; la correzione è preparata per la prossima versione 0.3.0.
+> La versione 0.3.0 richiede macOS 14+. I precedenti DMG v0.2.0 e v0.1.8 restano invariati e richiedono macOS 26.
 
 ### Compila dal sorgente
 

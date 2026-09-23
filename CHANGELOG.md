@@ -1,10 +1,10 @@
 # Changelog
 
-## 0.3.0 — release candidate, build 11 (not published)
+## 0.3.0 — 2026-09-23 (build 11)
 
 ### Compatibility
 - Target macOS 14 Sonoma instead of macOS 26. Observation APIs require macOS 14;
-  macOS 13 is not supported. Addresses the source/build mismatch in issue #2.
+  macOS 13 is not supported. Fixes the source/build mismatch in [issue #2](https://github.com/Skimmenthal13/winfinder/issues/2).
 - Verify both Apple Silicon and Intel slices, including embedded Sparkle helpers.
 - Correct the feed metadata for the existing v0.2.0 and v0.1.8 downloads; historical
   DMGs remain unchanged and still require macOS 26.
@@ -36,6 +36,8 @@
 
 ### Validation limits
 - Local tests run on the available Mac. Runtime testing on macOS 14/15 is pending.
-- GitHub Actions has not run remotely yet. Developer ID signing and Apple
+- GitHub Actions passed for the prerelease commit. Developer ID signing and Apple
   notarization are complete for the app and DMG, with stapled tickets and
-  successful Gatekeeper checks. Publishing is still pending.
+  successful Gatekeeper checks.
+- Promoted the existing signed build to stable without waiting for reporter
+  feedback; confirmation from the issue reporter remains pending.

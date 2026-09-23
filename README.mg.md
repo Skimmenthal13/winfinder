@@ -6,6 +6,18 @@ Mpitantana rakitra ho an'ny macOS izay mahatsapa toy ny any an-trano — ho an'i
 
 ![Win Finder screenshot](docs/screenshot.png)
 
+## Vaovao amin’ny kinova 0.3.0
+
+- **Voavaha ny [issue #2](https://github.com/Skimmenthal13/winfinder/issues/2)** — nahitsy ny tsy fitoviana teo amin’ny fepetra macOS voasoratra sy ny app navoaka. Ny kinova 0.3.0 dia mitaky macOS 14 Sonoma na ambony kokoa amin’ny Apple Silicon sy Intel; tsy tohanana ny macOS 13.
+- **Famindrana rakitra milamina kokoa** — mandeha ao ambadika ny fanaovana kopia sy ny famindrana, miaraka amin’ny fandrosoana isaky ny singa sy famintinana ny hadisoana. Tsy aseho ho rakitra vita ny kopia mbola tsy feno.
+- **Fikarakarana rakitra azo antoka kokoa** — mandeha eo amin’ny varavarankely samihafa ny manapaka sy mametaka, ary azo averina ny famindrana tsy nahomby. Ny baiko amin’ny fitendry dia mihatra amin’ny varavarankely mavitrika ihany; aseho ny hadisoana amin’ny famoronana, fanovana anarana ary famafana.
+- **Famoronana ZIP ao ambadika** — mitahiry ny lalan’ny zana-folder sy ny arisiva efa misy, ary tsy mamela arisiva tsy feno rehefa tsy mahomby ny famatrarana.
+- **Fitetezana sy hitsin-dàlana** — tantaran’ny fiverenana sy fandrosoana amin’ny `Option+Ankavia/Ankavanana`, fanovana anarana amin’ny `F2`, hitsin-dàlana hamoronana rakitra sy folder ary tabilao mampiseho ny hitsin-dàlana amin’ny fitendry.
+- **Fikarohana sy fandaharana** — havaozina ny fikarohana rehefa miova ny rakitra, ajanona ny fikarohana lany andro ary misy fampandrenesana rehefa mihoatra ny 500 ny valiny. Voatahiry ny filaharana rehefa manavao na mikaroka, ary ny folder no eo aloha; esorina ny safidy lany andro rehefa mifindra toerana na mamafa.
+- **Fanitarana sy fanamarinana kalitao** — nohatsaraina ny fikirakirana ny lalan’ny rakitra amin’ny baikon’ny fanitarana, nampiana fitsapana 17 hisorohana ny fiverenan’ny lesoka sy fanamarinana mandeha ho azy ho an’ny build manohana ireo maritrano roa.
+
+[Ampidino ny 0.3.0 ary vakio ny naoty momba ny famoahana](https://github.com/Skimmenthal13/winfinder/releases/tag/v0.3.0). Ny app sy ny DMG dia voasonia amin’ny Developer ID ary nahazo notarization avy amin’i Apple. Voamarina ny kinova farany ambany amin’ny rafitra sy ireo maritrano roa; mbola andrasana ny fitsapana mivantana amin’ny macOS 14/15 sy ny fanamafisan’ny mpanoratra ny issue.
+
 ## Nahoana Win Finder?
 
 Tsara ny macOS. Fa raha efa nandany taona tamin'ny Windows ianao, ny Finder dia hiseho ho diso amin'ny fomba sarotra azo lazaina: tsy misy bary lalan-kalam-panovana, tsy misy fikarohana inline, tsy misy "Rakitra vaovao" amin'ny kilik-kavanana, ny fafana tsy mamafa. Zavatra kely izay mitambatra mamorona fanozongozona mifandimby.
@@ -49,7 +61,7 @@ Ny app rehetra dia afaka mifandray amin'ny Win Finder amin'ny alalan'ny famorona
 - macOS 14 Sonoma na any ambony kokoa
 - Mac Apple Silicon na Intel
 
-> Ny kaody loharano dia mitaky macOS 14+. Ny DMG v0.2.0 efa navoaka dia mbola mitaky macOS 26; voaomana ho an’ny kinova 0.3.0 manaraka ny fanitsiana.
+> Ny kinova 0.3.0 dia mitaky macOS 14+. Tsy niova ny DMG v0.2.0 sy v0.1.8 taloha ary mbola mitaky macOS 26.
 
 ### Amboary avy amin'ny loharano
 

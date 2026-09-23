@@ -1,13 +1,12 @@
-# Win Finder 0.3.0 candidate — build 11
+# Win Finder 0.3.0 — build 11
 
-Status: signed and notarized, published as a GitHub prerelease. On 2026-09-14
+Status: stable release, promoted from the GitHub prerelease on 2026-09-23. On 2026-09-14
 Apple accepted both the app submission and the final DMG. Tickets are stapled
 to the app and DMG; Gatekeeper accepts both as `Notarized Developer ID`. The
 app was also verified directly inside the final DMG, including both
 architectures and all embedded Sparkle components. The DMG is Sparkle-signed
-(see `release-artifacts/0.3.0/sparkle-signature.txt`), but the appcast has
-intentionally not been updated yet — this is a prerelease pending Sequoia
-feedback, not the promoted stable channel.
+(see `release-artifacts/0.3.0/sparkle-signature.txt`), and the stable appcast now advertises build 11 with a macOS 14.0 minimum.
+The website download and all six READMEs point to 0.3.0.
 
 Published at https://github.com/Skimmenthal13/winfinder/releases/tag/v0.3.0.
 
@@ -16,10 +15,10 @@ Local packages, notarization receipts and SHA-256 checksums are in
 installer with an Applications shortcut; `WinFinder-v0.3.0.zip` contains the
 stapled app. These supersede the earlier unsigned candidate in `/tmp`.
 
-## Release notes draft
+## Release notes
 
 Win Finder now targets macOS 14 Sonoma and later on Apple Silicon and Intel.
-This corrects the minimum OS mismatch reported in #2. Earlier downloadable builds
+This corrects the minimum OS mismatch reported in #2. The unchanged v0.2.0 and v0.1.8 DMGs
 still require macOS 26.
 
 This update also adds back/forward navigation and keyboard shortcuts, keeps file
@@ -28,25 +27,19 @@ shows errors when file operations fail. Transfers and ZIP creation run in the
 background. Search refreshes after filesystem changes, cancels obsolete queries,
 and explicitly reports the 500-result limit. Sorting survives refreshes.
 
-## Remaining release steps
+## Validation and publication
 
-1. Run the commands in [testing.md](testing.md). They include the compatibility
-   check for the main executable and all embedded Mach-O components.
-2. If any executable or bundle content changes, create a new signed archive,
-   repeat notarization, and verify the newly packaged app. The current candidate
-   has already completed this process.
-3. Done: asked the issue reporter (#2) to test the signed candidate on
-   Sequoia — https://github.com/Skimmenthal13/winfinder/issues/2#issuecomment-5670859864.
-   There is still no local macOS 14/15 runtime validation.
-4. Done: published as a GitHub prerelease
-   (https://github.com/Skimmenthal13/winfinder/releases/tag/v0.3.0) with the
-   DMG, ZIP and SHA256SUMS.txt attached.
-5. Once Sequoia feedback comes back positive, promote the release (uncheck
-   prerelease), add the appcast entry (build 11, minimumSystemVersion 14.0,
-   the Sparkle signature already generated in
-   `release-artifacts/0.3.0/sparkle-signature.txt`), update the website
-   download link, and remove the temporary published-v0.2.0 compatibility
-   notice from the READMEs.
+- Published the signed and notarized DMG, ZIP and SHA256SUMS.txt as a prerelease
+  on 2026-09-14. The stable release reuses these exact assets without rebuilding.
+- Verified local package sizes and SHA-256 checksums against the published assets
+  before promotion. The appcast uses the existing Sparkle signature.
+- GitHub Actions passed for commit `804287a`, including the project checks.
+- On 2026-09-23, the maintainer chose to release without waiting for the issue
+  reporter. Issue #2 is documented as fixed by the corrected deployment target
+  and release metadata. Direct runtime testing on macOS 14/15 and reporter
+  confirmation remain pending; no such confirmation is claimed.
+- Future executable or bundle changes require a new signed archive, notarization
+  and package verification. See [testing.md](testing.md) for validation commands.
 
 ## Reply sent to issue #2
 

@@ -6,6 +6,18 @@ A file manager for macOS that feels like home — for anyone who comes from Wind
 
 ![Win Finder screenshot](docs/screenshot.png)
 
+## What's new in 0.3.0
+
+- **Fixed [issue #2](https://github.com/Skimmenthal13/winfinder/issues/2)** — corrected the mismatch between the documented macOS requirement and the released app. Version 0.3.0 targets macOS 14 Sonoma and later on Apple Silicon and Intel; macOS 13 is not supported.
+- **More responsive file transfers** — copying and moving run in the background, with per-item progress and an error summary. Incomplete copies are not exposed as finished files.
+- **Reliable file operations** — cut/paste works across windows and failed moves can be retried. Keyboard commands affect only the active window; creation, rename and deletion failures are reported.
+- **Background ZIP creation** — preserves nested paths and existing archives, and avoids leaving incomplete archives when compression fails.
+- **Navigation and shortcuts** — back/forward history with `Option+Left/Right`, `F2` to rename, shortcuts for new files and folders, and a keyboard shortcuts panel.
+- **Search and sorting** — active searches refresh when files change, obsolete searches are cancelled, and a notice appears above 500 matches. Sorting survives refreshes and searches, with folders first; stale selections are cleared after navigation or deletion.
+- **Extensions and quality checks** — improved handling of file paths in extension commands, 17 regression tests and automated universal-build compatibility checks.
+
+[Download 0.3.0 and read the release notes](https://github.com/Skimmenthal13/winfinder/releases/tag/v0.3.0). The app and DMG are Developer ID signed and Apple-notarized. The minimum OS and both architectures have been checked; direct runtime testing on macOS 14/15 and confirmation from the issue reporter are still pending.
+
 ## Why Win Finder?
 
 macOS is a great operating system. But if you spent years on Windows, the Finder feels wrong in ways that are hard to explain: no editable path bar, no inline search, no right-click "New File", Delete doesn't delete. Small things that add up to constant friction.
@@ -78,7 +90,7 @@ Win Finder reads these files at startup and adds the actions to the right-click 
 - macOS 14 Sonoma or later
 - Apple Silicon or Intel Mac
 
-> The source targets macOS 14+. The currently published v0.2.0 DMG still requires macOS 26; the compatibility fix is prepared for the upcoming 0.3.0 release.
+> Version 0.3.0 requires macOS 14+. The older v0.2.0 and v0.1.8 DMGs remain unchanged and require macOS 26.
 
 ### Build from source
 
